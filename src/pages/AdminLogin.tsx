@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, ShieldAlert, ArrowRight } from 'lucide-react';
+import './AdminLogin.css';
 
 export const AdminLogin: React.FC = () => {
     const { signIn, loading } = useAuth();
