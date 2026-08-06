@@ -5,15 +5,13 @@ import { CheckInTable } from './components/admin/CheckInTable';
 import { RateController } from './components/admin/RateController';
 import { TicketPortal } from './components/admin/TicketPortal';
 import { StaffManager } from './components/admin/StaffManager';
-import { GeminiAdvisorUI } from './components/admin/GeminiAdvisorUI';
-import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, Sparkles } from 'lucide-react';
+import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF' | 'AI'>('CHECKIN');
+  const [activeTab, setActiveTab] = useState<'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF'>('CHECKIN');
 
-
-  if(loading) {
+  if (loading) {
     return (
       <div className="login-container">
         <div style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Loading application...</div>
@@ -40,13 +38,11 @@ const MainContent: React.FC = () => {
         >
           <LogOut size={16} />
           Sign Out
-        
         </button>
       </header>
-      
+
       {/* Navigation Tabs */}
-      <nav style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-        
+      <nav style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <button
           onClick={() => setActiveTab('CHECKIN')}
           style={{
@@ -63,9 +59,9 @@ const MainContent: React.FC = () => {
           }}
         >
           <ListCheck size={18} />
-          Check-in & Bookings Log
+          Check-in Log
         </button>
-        
+
         <button
           onClick={() => setActiveTab('RATES')}
           style={{
@@ -82,8 +78,7 @@ const MainContent: React.FC = () => {
           }}
         >
           <SlidersHorizontal size={18} />
-          Court Rates & Status Toggles
-        
+          Court Rates & Toggles
         </button>
 
         <button
@@ -102,7 +97,7 @@ const MainContent: React.FC = () => {
           }}
         >
           <MessageSquareText size={18} />
-          Support Inquiries & Email Replies
+          Support Inquiries
         </button>
 
         <button
@@ -123,34 +118,13 @@ const MainContent: React.FC = () => {
           <Users size={18} />
           Staff Management
         </button>
-
-        <button
-          onClick={() => setActiveTab('AI')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.75rem 1.25rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            fontWeight: 600,
-            cursor: 'pointer',
-            background: activeTab === 'AI' ? '#10b981' : '#1e293b',
-            color: activeTab === 'AI' ? '#022c22' : '#94a3b8',
-          }}
-        >
-          <Sparkles size={18} />
-          AI Advisor
-        </button>
-      
       </nav>
-      
+
       {/* Render Active View */}
       {activeTab === 'CHECKIN' && <CheckInTable />}
       {activeTab === 'RATES' && <RateController />}
       {activeTab === 'TICKETS' && <TicketPortal />}
       {activeTab === 'STAFF' && <StaffManager />}
-      {activeTab === 'AI' && <GeminiAdvisorUI />}
     </div>
   );
 };
