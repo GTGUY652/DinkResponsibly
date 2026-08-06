@@ -1,6 +1,7 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminLogin } from './pages/AdminLogin';
+import { CheckInTable } from './components/admin/CheckInTable';
 import { LogOut, UserCheck } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -40,12 +41,7 @@ const MainContent: React.FC = () => {
       
       </header>
       
-      <main style={{ background: '#1e293b', padding: '3rem', borderRadius: '0.75rem', border: '1px solid #334155', textAlign: 'center' }}>
-        <UserCheck size={48} style={{ color: '#10b981', marginBottom: '1rem' }} />
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Authentication Working Successfully!</h2>
-        <p style={{ color: '#94a3b8' }}>You are logged in as {profile?.role || 'STAFF'}. We are ready to build Phase 2 (Live Check-in & Transaction Table)!</p>
-      </main>
-    
+      <CheckInTable />
     </div>
   );
 };
