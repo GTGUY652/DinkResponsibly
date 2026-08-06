@@ -52,25 +52,25 @@ export const CheckInTable: React.FC = () => {
         }
     };
 
-    useEffect(() => {
+      useEffect(() => {
         fetchBookings();
-
-        // Supabase Realtime Subscription to bookings table
-        const subscription = supabase
-            .channel('realtime_bookings')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'bookings' },
-                () => {
-                fetchBookings();
-                }
-            )
-            .subscribe();
+        
+        // Supabase Realtime Subscription
+        
+        const channel = supabase
+        .channel('realtime_bookings')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'bookings' },
+            () => {
+            fetchBookings();
+            }
+        )
+        .subscribe();
         
         return () => {
-            supabase.removeChannel(subscription);
+        supabase.removeChannel(channel);
         };
-
   }, []);
 
   // Filter bookings based on search query, selected court, and date
