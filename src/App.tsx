@@ -3,11 +3,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminLogin } from './pages/AdminLogin';
 import { CheckInTable } from './components/admin/CheckInTable';
 import { RateController } from './components/admin/RateController';
-import { LogOut, ListCheck, SlidersHorizontal } from 'lucide-react';
+import { TicketPortal } from './components/admin/TicketPortal';
+import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'CHECKIN' | 'RATES'>('CHECKIN');
+  const [activeTab, setActiveTab] = useState<'CHECKIN' | 'RATES' | 'TICKETS'>('CHECKIN');
 
   if(loading) {
     return (
@@ -36,10 +37,13 @@ const MainContent: React.FC = () => {
         >
           <LogOut size={16} />
           Sign Out
+        
         </button>
       </header>
+      
       {/* Navigation Tabs */}
       <nav style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+        
         <button
           onClick={() => setActiveTab('CHECKIN')}
           style={{
@@ -58,6 +62,7 @@ const MainContent: React.FC = () => {
           <ListCheck size={18} />
           Check-in & Bookings Log
         </button>
+        
         <button
           onClick={() => setActiveTab('RATES')}
           style={{
@@ -75,11 +80,34 @@ const MainContent: React.FC = () => {
         >
           <SlidersHorizontal size={18} />
           Court Rates & Status Toggles
+        
         </button>
+
+        <button
+          onClick={() => setActiveTab('TICKETS')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+            background: activeTab === 'TICKETS' ? '#10b981' : '#1e293b',
+            color: activeTab === 'TICKETS' ? '#022c22' : '#94a3b8',
+          }}
+        >
+          <MessageSquareText size={18} />
+          Support Inquiries & Email Replies
+        </button>
+      
       </nav>
+      
       {/* Render Active View */}
       {activeTab === 'CHECKIN' && <CheckInTable />}
       {activeTab === 'RATES' && <RateController />}
+      {activeTab === 'TICKETS' && <TicketPortal />}
     </div>
   );
 };
