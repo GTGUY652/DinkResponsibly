@@ -1,0 +1,140 @@
+/* Gemini Advisor UI Styling */
+.gemini-advisor-wrapper {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.advisor-header h2 {
+  font-size: 1.25rem;
+  color: #f8fafc;
+  margin-bottom: 0.25rem;
+}
+
+.advisor-header p {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.metrics-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.metric-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #34d399;
+  margin-bottom: 0.25rem;
+}
+
+.metric-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.ai-chat-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.ai-chat-card h3 {
+  font-size: 1.1rem;
+  color: #f8fafc;
+  margin-bottom: 1rem;
+}
+
+.chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.chip-btn {
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #334155;
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.chip-btn:hover {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.ai-prompt-form {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ai-prompt-form input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  color: #f8fafc;
+  font-size: 0.9rem;
+}
+
+.ask-btn {
+  display: flex;
+  align-items: center;
+  background: #10b981;
+  color: #022c22;
+  font-weight: 600;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+}
+
+.ai-response-box {
+  margin-top: 1.25rem;
+  background: #1e293b;
+  border-left: 4px solid #10b981;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+}
+
+.response-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #34d399;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-response-box p {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}

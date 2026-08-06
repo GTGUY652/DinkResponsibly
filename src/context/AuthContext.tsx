@@ -7,6 +7,7 @@ export interface UserProfile {
   email: string;
   full_name: string;
   role: 'OWNER' | 'STAFF';
+  is_active?: boolean;
 }
 
 interface AuthContextType {
@@ -26,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -36,33 +37,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching user profile:', error.message);
-      } else {
-        setProfile(data as UserProfile);
+        return null;
+      } else if (data) {
+        const userProf = data as UserProfile;
+        setProfile(userProf);
+        return userProf;
       }
     } catch (err) {
       console.error('Unexpected error fetching profile:', err);
     }
+    return null;
+  };
+
+  const handleDeactivatedUser = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setLoading(false);
+    alert('⛔ Access Denied: Your staff account has been deactivated by the Court Owner.');
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        fetchProfile(session.user.id);
+        const userProf = await fetchProfile(session.user.id);
+        if (userProf && userProf.is_active === false) {
+          await handleDeactivatedUser();
+          return;
+        }
+        setSession(session);
+        setUser(session.user);
       }
       setLoading(false);
     });
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          const userProf = await fetchProfile(session.user.id);
+          if (userProf && userProf.is_active === false) {
+            await handleDeactivatedUser();
+            return;
+          }
+          setSession(session);
+          setUser(session.user);
         } else {
+          setSession(null);
+          setUser(null);
           setProfile(null);
         }
         setLoading(false);
@@ -72,7 +94,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-    
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -81,11 +102,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
     });
-    if (data.user) {
-      await fetchProfile(data.user.id);
+
+    if (error) {
+      setLoading(false);
+      return { error: error as Error };
     }
+
+    if (data.user) {
+      const userProf = await fetchProfile(data.user.id);
+      if (userProf && userProf.is_active === false) {
+        await handleDeactivatedUser();
+        return { error: new Error('Your staff account has been deactivated by the Court Owner.') };
+      }
+    }
+
     setLoading(false);
-    return { error: error as Error | null };
+    return { error: null };
   };
 
   const signOut = async () => {

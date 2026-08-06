@@ -4,11 +4,14 @@ import { AdminLogin } from './pages/AdminLogin';
 import { CheckInTable } from './components/admin/CheckInTable';
 import { RateController } from './components/admin/RateController';
 import { TicketPortal } from './components/admin/TicketPortal';
-import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText } from 'lucide-react';
+import { StaffManager } from './components/admin/StaffManager';
+import { GeminiAdvisorUI } from './components/admin/GeminiAdvisorUI';
+import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, Sparkles } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'CHECKIN' | 'RATES' | 'TICKETS'>('CHECKIN');
+  const [activeTab, setActiveTab] = useState<'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF' | 'AI'>('CHECKIN');
+
 
   if(loading) {
     return (
@@ -101,6 +104,44 @@ const MainContent: React.FC = () => {
           <MessageSquareText size={18} />
           Support Inquiries & Email Replies
         </button>
+
+        <button
+          onClick={() => setActiveTab('STAFF')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+            background: activeTab === 'STAFF' ? '#10b981' : '#1e293b',
+            color: activeTab === 'STAFF' ? '#022c22' : '#94a3b8',
+          }}
+        >
+          <Users size={18} />
+          Staff Management
+        </button>
+
+        <button
+          onClick={() => setActiveTab('AI')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+            background: activeTab === 'AI' ? '#10b981' : '#1e293b',
+            color: activeTab === 'AI' ? '#022c22' : '#94a3b8',
+          }}
+        >
+          <Sparkles size={18} />
+          AI Advisor
+        </button>
       
       </nav>
       
@@ -108,6 +149,8 @@ const MainContent: React.FC = () => {
       {activeTab === 'CHECKIN' && <CheckInTable />}
       {activeTab === 'RATES' && <RateController />}
       {activeTab === 'TICKETS' && <TicketPortal />}
+      {activeTab === 'STAFF' && <StaffManager />}
+      {activeTab === 'AI' && <GeminiAdvisorUI />}
     </div>
   );
 };
