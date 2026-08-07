@@ -1,6 +1,6 @@
 # 0001 Admin Dashboard Specification
 
-**Status**: Proposed
+**Status**: Accepted
 
 ## Summary
 

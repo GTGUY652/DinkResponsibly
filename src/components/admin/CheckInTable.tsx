@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../services/supabase';
 import { Search, Calendar, Filter, ExternalLink, RefreshCw, CheckCircle, Clock } from 'lucide-react';
 import './CheckInTable.css';
@@ -26,9 +26,7 @@ export const CheckInTable: React.FC = () => {
     const [selectedCourt, setSelectedCourt] = useState('ALL');
     const [selectedDate, setSelectedDate] = useState('');
 
-    const fetchBookings = async () => {
-        setLoading(true);
-
+    const fetchBookings = useCallback(async () => {
         try {
             const { data, error } = await supabase
                 .from('bookings')
@@ -50,28 +48,27 @@ export const CheckInTable: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-      useEffect(() => {
-        fetchBookings();
+    useEffect(() => {
+        void fetchBookings();
         
         // Supabase Realtime Subscription
-        
         const channel = supabase
         .channel('realtime_bookings')
         .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'bookings' },
             () => {
-            fetchBookings();
+                void fetchBookings();
             }
         )
         .subscribe();
         
         return () => {
-        supabase.removeChannel(channel);
+            supabase.removeChannel(channel);
         };
-  }, []);
+    }, [fetchBookings]);
 
   // Filter bookings based on search query, selected court, and date
   const filteredBookings = bookings.filter((item) => {
