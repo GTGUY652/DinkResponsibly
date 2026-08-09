@@ -1,122 +1,138 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AdminLogin } from './pages/AdminLogin';
+import { CheckInTable } from './components/admin/CheckInTable';
+import { RateController } from './components/admin/RateController';
+import { TicketPortal } from './components/admin/TicketPortal';
+import { StaffManager } from './components/admin/StaffManager';
+import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users } from 'lucide-react';
 
-function App() {
-  const [count, setCount] = useState(0)
+const MainContent: React.FC = () => {
+  const { user, profile, loading, signOut } = useAuth();
+  const [activeTab, setActiveTab] = useState<'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF'>('CHECKIN');
+
+  if (loading) {
+    return (
+      <div className="login-container">
+        <div style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Loading application...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AdminLogin />;
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '2rem' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: '#1e293b', padding: '1rem 2rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+          <h1 style={{ fontSize: '1.5rem', margin: 0, color: '#f8fafc' }}>DinkResponsibly Admin Portal</h1>
+          <p style={{ margin: '0.25rem 0 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>
+            Logged in as: <strong style={{ color: '#10b981' }}>{profile?.full_name || user.email}</strong> ({profile?.role || 'STAFF'})
           </p>
         </div>
         <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          onClick={signOut}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ef4444', color: '#ffffff', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600 }}
         >
-          Count is {count}
+          <LogOut size={16} />
+          Sign Out
         </button>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
+      {/* Navigation Tabs */}
+      <nav style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => setActiveTab('CHECKIN')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+            background: activeTab === 'CHECKIN' ? '#10b981' : '#1e293b',
+            color: activeTab === 'CHECKIN' ? '#022c22' : '#94a3b8',
+          }}
+        >
+          <ListCheck size={18} />
+          Check-in Log
+        </button>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <button
+          onClick={() => setActiveTab('RATES')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+            background: activeTab === 'RATES' ? '#10b981' : '#1e293b',
+            color: activeTab === 'RATES' ? '#022c22' : '#94a3b8',
+          }}
+        >
+          <SlidersHorizontal size={18} />
+          Court Rates & Toggles
+        </button>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <button
+          onClick={() => setActiveTab('TICKETS')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+            background: activeTab === 'TICKETS' ? '#10b981' : '#1e293b',
+            color: activeTab === 'TICKETS' ? '#022c22' : '#94a3b8',
+          }}
+        >
+          <MessageSquareText size={18} />
+          Support Inquiries
+        </button>
+
+        <button
+          onClick={() => setActiveTab('STAFF')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+            background: activeTab === 'STAFF' ? '#10b981' : '#1e293b',
+            color: activeTab === 'STAFF' ? '#022c22' : '#94a3b8',
+          }}
+        >
+          <Users size={18} />
+          Staff Management
+        </button>
+      </nav>
+
+      {/* Render Active View */}
+      {activeTab === 'CHECKIN' && <CheckInTable />}
+      {activeTab === 'RATES' && <RateController />}
+      {activeTab === 'TICKETS' && <TicketPortal />}
+      {activeTab === 'STAFF' && <StaffManager />}
+    </div>
+  );
+};
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainContent />
+    </AuthProvider>
+  );
 }
-
-export default App

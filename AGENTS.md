@@ -9,7 +9,7 @@
 
 ## Build approach
 
-<TBD, set by /scope>
+- **Tracer Bullet**: vertical end to end slices, thin but complete through every layer
 
 ## Commands
 
@@ -25,6 +25,9 @@ npm run build
 
 # Preview build
 npm run preview
+
+# Lint code
+npm run lint
 ```
 
 ## Git
@@ -51,6 +54,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`.
 
 ## Context files
 
+- [src/components/admin/AGENTS.md](src/components/admin/AGENTS.md): Admin Dashboard presentation components for check-in, dynamic rates, support tickets, and staff management
 - [supabase/functions/AGENTS.md](supabase/functions/AGENTS.md): Supabase serverless edge functions for availability, PayMongo payments, Resend emails, and Gemini AI
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
