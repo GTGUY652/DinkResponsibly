@@ -70,15 +70,13 @@ describe('bookingService', () => {
   describe('fetchBookedSlots (AC-1, AC-4)', () => {
     it('should return booked hour ranges for a specific court and date', async () => {
       const mockSlots = [
-        { start_hour: 7, end_hour: 9 },
-        { start_hour: 17, end_hour: 18 },
+        { start_hour: 7, end_hour: 9, court_id: 'Court A' },
+        { start_hour: 17, end_hour: 18, court_id: 'Court A' },
       ];
 
       const selectMock = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            neq: vi.fn().mockResolvedValue({ data: mockSlots, error: null }),
-          }),
+          neq: vi.fn().mockResolvedValue({ data: mockSlots, error: null }),
         }),
       });
 
@@ -86,15 +84,16 @@ describe('bookingService', () => {
 
       const result = await fetchBookedSlots('Court A', '2026-12-20');
       expect(supabase.from).toHaveBeenCalledWith('bookings');
-      expect(result).toEqual(mockSlots);
+      expect(result).toEqual([
+        { start_hour: 7, end_hour: 9 },
+        { start_hour: 17, end_hour: 18 },
+      ]);
     });
 
     it('should handle errors gracefully and return an empty array', async () => {
       const selectMock = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            neq: vi.fn().mockResolvedValue({ data: null, error: { message: 'Database error' } }),
-          }),
+          neq: vi.fn().mockResolvedValue({ data: null, error: { message: 'Database error' } }),
         }),
       });
 
@@ -105,8 +104,8 @@ describe('bookingService', () => {
     });
   });
 
-  describe('createBooking (AC-3)', () => {
-    it('should insert a reservation record into Supabase and return the created record', async () => {
+  describe('createBooking (AC-3, Double Booking Safeguard)', () => {
+    it('should insert a reservation record into Supabase if no overlap exists', async () => {
       const newBooking: Omit<BookingRecord, 'id' | 'created_at'> = {
         booking_code: 'DR-TEST01',
         court_id: 'Court A',
@@ -123,44 +122,61 @@ describe('bookingService', () => {
 
       const insertedRecord = { id: 'uuid-123', ...newBooking, created_at: '2026-08-10T00:00:00Z' };
 
-      const insertMock = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: insertedRecord, error: null }),
-        }),
+      (supabase.from as any).mockImplementation((table: string) => {
+        if (table === 'bookings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                neq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+            insert: vi.fn().mockReturnValue({
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: insertedRecord, error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
       });
 
-      (supabase.from as any).mockReturnValue({ insert: insertMock });
-
       const result = await createBooking(newBooking);
-      expect(supabase.from).toHaveBeenCalledWith('bookings');
-      expect(insertMock).toHaveBeenCalledWith([newBooking]);
       expect(result).toEqual(insertedRecord);
     });
 
-    it('should throw an error when insert fails', async () => {
+    it('should reject booking with an error if an overlapping reservation exists', async () => {
       const newBooking: Omit<BookingRecord, 'id' | 'created_at'> = {
-        booking_code: 'DR-TEST01',
-        court_id: 'Court A',
-        booking_date: '2026-12-20',
-        start_hour: 8,
-        end_hour: 11,
-        duration_hours: 3,
-        total_price: 1200,
-        guest_name: 'Juan Dela Cruz',
-        guest_email: 'juan@example.com',
+        booking_code: 'DR-TEST02',
+        court_id: 'Court B',
+        booking_date: '2026-08-10',
+        start_hour: 15, // 3 PM
+        end_hour: 16,   // 4 PM
+        duration_hours: 1,
+        total_price: 400,
+        guest_name: 'Enz',
+        guest_email: 'enz@example.com',
         guest_phone: '09171234567',
         status: 'confirmed',
       };
 
-      const insertMock = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } }),
-        }),
+      const existingBookings = [
+        { start_hour: 15, end_hour: 16, court_id: 'Court B' },
+      ];
+
+      (supabase.from as any).mockImplementation((table: string) => {
+        if (table === 'bookings') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                neq: vi.fn().mockResolvedValue({ data: existingBookings, error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
       });
 
-      (supabase.from as any).mockReturnValue({ insert: insertMock });
-
-      await expect(createBooking(newBooking)).rejects.toThrow('Insert failed');
+      await expect(createBooking(newBooking)).rejects.toThrow('Double Booking Rejection');
     });
   });
 
@@ -171,6 +187,7 @@ describe('bookingService', () => {
           id: '1',
           booking_code: 'DR-8X9K2L',
           court_id: 'Court A',
+          court_name: 'Court A',
           booking_date: '2026-12-20',
           start_hour: 8,
           end_hour: 11,

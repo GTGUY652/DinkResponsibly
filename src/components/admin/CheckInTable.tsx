@@ -1,16 +1,29 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../services/supabase';
-import { fetchAdminBookings, updateBookingStatus, deleteBookingRecord } from '../../services/bookingService';
-import type { BookingRecord } from '../../services/bookingService';
-import { Search, Calendar, Filter, RefreshCw, Clock, Trash2 } from 'lucide-react';
+import { fetchAdminBookings, updateBookingStatus, deleteBookingRecord, fetchCourts } from '../../services/bookingService';
+import type { BookingRecord, CourtRecord } from '../../services/bookingService';
+import { Search, Calendar, Filter, RefreshCw, Clock, Trash2, FileText } from 'lucide-react';
+import { ReceiptModal } from './ReceiptModal';
 import './CheckInTable.css';
 
 export const CheckInTable: React.FC = () => {
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
+  const [courtsList, setCourtsList] = useState<CourtRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourt, setSelectedCourt] = useState('ALL');
   const [selectedDate, setSelectedDate] = useState('');
+
+  // Receipt Modal State
+  const [selectedBookingForReceipt, setSelectedBookingForReceipt] = useState<BookingRecord | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+
+  const loadCourts = useCallback(async () => {
+    const data = await fetchCourts();
+    if (data && data.length > 0) {
+      setCourtsList(data);
+    }
+  }, []);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -25,6 +38,7 @@ export const CheckInTable: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    void loadCourts();
     void fetchBookings();
 
     const channel = supabase
@@ -41,7 +55,7 @@ export const CheckInTable: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchBookings]);
+  }, [fetchBookings, loadCourts]);
 
   const handleStatusChange = async (id: string, newStatus: 'confirmed' | 'checked_in' | 'cancelled') => {
     try {
@@ -63,6 +77,11 @@ export const CheckInTable: React.FC = () => {
     }
   };
 
+  const handleOpenReceipt = (booking: BookingRecord) => {
+    setSelectedBookingForReceipt(booking);
+    setIsReceiptModalOpen(true);
+  };
+
   const formatHourLabel = (hour: number): string => {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const h12 = hour % 12 === 0 ? 12 : hour % 12;
@@ -81,15 +100,30 @@ export const CheckInTable: React.FC = () => {
     });
   };
 
+  // Convert UUID or ID to clean human-readable Court Name using relational court_name or fallback
+  const getCourtDisplayName = (item: BookingRecord): string => {
+    if (item.court_name && !item.court_name.includes('-')) return item.court_name;
+    const match = courtsList.find((c) => c.id === item.court_id || c.name === item.court_id);
+    if (match) return match.name;
+    if (item.court_id && item.court_id.toLowerCase().includes('court')) return item.court_id;
+    return 'Court B';
+  };
+
   const filteredBookings = bookings.filter((item) => {
     const query = searchQuery.toLowerCase();
+    const courtName = getCourtDisplayName(item);
     const matchesSearch =
       item.booking_code.toLowerCase().includes(query) ||
       item.guest_name.toLowerCase().includes(query) ||
       item.guest_email.toLowerCase().includes(query) ||
-      item.guest_phone.includes(query);
+      item.guest_phone.includes(query) ||
+      courtName.toLowerCase().includes(query);
 
-    const matchesCourt = selectedCourt === 'ALL' || item.court_id === selectedCourt;
+    const matchesCourt =
+      selectedCourt === 'ALL' ||
+      item.court_id === selectedCourt ||
+      courtName === selectedCourt;
+
     const matchesDate = !selectedDate || item.booking_date === selectedDate;
 
     return matchesSearch && matchesCourt && matchesDate;
@@ -156,7 +190,7 @@ export const CheckInTable: React.FC = () => {
                 <th>Date & Playing Time</th>
                 <th>Total Price</th>
                 <th>Check-in Status</th>
-                <th>Actions</th>
+                <th>Receipt & Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -172,7 +206,7 @@ export const CheckInTable: React.FC = () => {
                     </div>
                   </td>
                   <td>
-                    <span className="court-tag">{b.court_id}</span>
+                    <span className="court-tag">{getCourtDisplayName(b)}</span>
                   </td>
                   <td>
                     <div className="time-info">
@@ -198,13 +232,22 @@ export const CheckInTable: React.FC = () => {
                     </select>
                   </td>
                   <td>
-                    <button
-                      onClick={() => handleDelete(b.id!)}
-                      className="delete-action-btn"
-                      title="Delete Reservation"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => handleOpenReceipt(b)}
+                        className="receipt-action-btn"
+                        title="View Official Receipt"
+                      >
+                        <FileText size={15} /> Receipt
+                      </button>
+                      <button
+                        onClick={() => handleDelete(b.id!)}
+                        className="delete-action-btn"
+                        title="Delete Reservation"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -212,6 +255,13 @@ export const CheckInTable: React.FC = () => {
           </table>
         )}
       </div>
+
+      {/* Digital Receipt Modal Component */}
+      <ReceiptModal
+        isOpen={isReceiptModalOpen}
+        onClose={() => setIsReceiptModalOpen(false)}
+        booking={selectedBookingForReceipt}
+      />
     </div>
   );
 };
