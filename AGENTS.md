@@ -54,6 +54,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`.
 - All cross boundary communication uses plain objects or DTOs. No domain entities leak into presentation layer.
 - Tests: domain and application layers are unit tested with no mocks of infrastructure. Infrastructure is integration tested against real systems.
 - Booking business rules: 4 Courts managed simultaneously (Court A, Court B, Court C, Court D). Bookings enforce strict 1-hour slots. Dynamic pricing applies (Weekdays 6:00 AM to 4:00 PM at 400 PHP per hour, Weekdays 5:00 PM to 2:00 AM at 500 PHP per hour, Weekends 6:00 AM to 2:00 AM flat rate 500 PHP per hour). Direct guest checkout without requiring customer accounts.
+- Edge Functions vs Client SDK rule: Direct DB operations use `src/services/bookingService.ts` via `@supabase/supabase-js`. Edge Functions in `supabase/functions/` are reserved for PayMongo payments (`paymongo-checkout`, `paymongo-webhook`), Resend emails (`send-email`), and Gemini AI (`gemini-advisor`).
 
 ## Context files
 
