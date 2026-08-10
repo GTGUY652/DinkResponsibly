@@ -23,18 +23,15 @@ export const AvailabilitySection: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<number>(today.getDate());
   const [sessionFilter, setSessionFilter] = useState<'ALL' | 'AM' | 'PM'>('ALL');
 
-  // Start hour and End hour markers
   const [startHour, setStartHour] = useState<number | null>(null);
   const [endHour, setEndHour] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Live Supabase integration states
   const [bookedHours, setBookedHours] = useState<number[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [bookingSuccessCode, setBookingSuccessCode] = useState<string | null>(null);
   const [loadingSlots, setLoadingSlots] = useState<boolean>(false);
 
-  // Load court operational status & rates from Supabase
   const loadCourts = useCallback(async () => {
     const data = await fetchCourts();
     if (data && data.length > 0) {
@@ -61,7 +58,6 @@ export const AvailabilitySection: React.FC = () => {
     };
   }, [loadCourts]);
 
-  // Dynamic calendar calculations
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay(); // 0 = Sun, 6 = Sat
 
@@ -78,7 +74,6 @@ export const AvailabilitySection: React.FC = () => {
   const formattedDateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`;
   const displayDateStr = `${monthNameShort[currentMonth]} ${selectedDay}, ${currentYear}`;
 
-  // Check if selected date falls on a weekend (Sat=6, Sun=0)
   const selectedDateObj = new Date(currentYear, currentMonth, selectedDay);
   const isWeekend = selectedDateObj.getDay() === 0 || selectedDateObj.getDay() === 6;
 
@@ -104,7 +99,6 @@ export const AvailabilitySection: React.FC = () => {
   const isCourtOperational = activeCourtRecord ? activeCourtRecord.is_active : true;
   const displayCourtName = activeCourtRecord?.name || selectedCourt;
 
-  // Base hour markers (06:00 AM to 10:00 PM)
   const rawHourList = [
     { hour: 6, label: '6:00 AM', session: 'AM' as const },
     { hour: 7, label: '7:00 AM', session: 'AM' as const },
@@ -126,7 +120,6 @@ export const AvailabilitySection: React.FC = () => {
     { hour: 22, label: '10:00 PM', session: 'PM' as const },
   ];
 
-  // Dynamically compute rate per hour marker using active court's configuration
   const baseTimePoints = rawHourList.map((item) => {
     let rate = 400;
     if (activeCourtRecord) {
@@ -142,7 +135,6 @@ export const AvailabilitySection: React.FC = () => {
     return { ...item, rate };
   });
 
-  // Fetch live availability from Supabase
   const loadAvailability = useCallback(async () => {
     setLoadingSlots(true);
     const bookedRanges = await fetchBookedSlots(selectedCourt, formattedDateStr);
@@ -160,13 +152,11 @@ export const AvailabilitySection: React.FC = () => {
 
   useEffect(() => {
     void loadAvailability();
-    // Reset hour selection when court, date, or month changes
     setStartHour(null);
     setEndHour(null);
     setErrorMessage(null);
   }, [selectedCourt, currentYear, currentMonth, selectedDay, loadAvailability]);
 
-  // Adjust selected day if month changes to a month with fewer days (e.g. 31 -> Feb 28)
   useEffect(() => {
     if (selectedDay > daysInMonth) {
       setSelectedDay(daysInMonth);
@@ -286,7 +276,6 @@ export const AvailabilitySection: React.FC = () => {
 
   return (
     <section id="availability" className="section-container">
-      {/* Floating Corner Reset Button */}
       {startHour !== null && (
         <button
           onClick={() => { setStartHour(null); setEndHour(null); setErrorMessage(null); }}
@@ -323,7 +312,6 @@ export const AvailabilitySection: React.FC = () => {
       )}
 
       <div className="availability-grid">
-        {/* Step 1: Dynamic Calendar Date Picker Card */}
         <div className="card-box date-card">
           <div className="card-title-bar">
             <CalendarIcon size={20} className="text-accent" />
@@ -345,12 +333,10 @@ export const AvailabilitySection: React.FC = () => {
           </div>
 
           <div className="calendar-grid">
-            {/* Blank offset cells for month start alignment */}
             {Array.from({ length: firstDayOfWeek }).map((_, i) => (
               <div key={`blank-${i}`} />
             ))}
 
-            {/* Day buttons */}
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
               <button
                 key={day}
@@ -363,7 +349,6 @@ export const AvailabilitySection: React.FC = () => {
           </div>
         </div>
 
-        {/* Step 2: Timeline Grid with Hour Markers */}
         <div className="card-box booking-card">
           <div className="card-title-bar">
             <Clock size={20} className="text-accent" />
@@ -371,7 +356,6 @@ export const AvailabilitySection: React.FC = () => {
             {loadingSlots && <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: 'auto' }}>Loading availability...</span>}
           </div>
 
-          {/* Court Tabs */}
           <div className="court-tabs">
             {availableCourtsDisplay.map((court) => (
               <button
@@ -385,7 +369,6 @@ export const AvailabilitySection: React.FC = () => {
             ))}
           </div>
 
-          {/* Maintenance Banner */}
           {!isCourtOperational && (
             <div className="court-maintenance-alert">
               <Wrench size={20} />
@@ -398,7 +381,6 @@ export const AvailabilitySection: React.FC = () => {
             </div>
           )}
 
-          {/* AM / PM Session Filter Tabs */}
           <div className="session-filter-container">
             <span className="session-label">Filter Session:</span>
             <div className="session-tabs">
@@ -423,7 +405,6 @@ export const AvailabilitySection: React.FC = () => {
             </div>
           </div>
 
-          {/* Guidance Banner */}
           <div style={{ margin: '0 0 1rem 0' }}>
             {isCourtOperational && startHour === null && (
               <p className="timeline-instruction" style={{ margin: 0 }}>
@@ -449,7 +430,6 @@ export const AvailabilitySection: React.FC = () => {
             </div>
           )}
 
-          {/* Time Marker Cards Grid */}
           <div className="spacious-slots-grid">
             {displayedPoints.map((point) => {
               const effectiveEnd = endHour !== null ? endHour : startHour;
@@ -487,7 +467,6 @@ export const AvailabilitySection: React.FC = () => {
             })}
           </div>
 
-          {/* Reservation Summary Bar */}
           {summary.isComplete ? (
             <div className="booking-summary-bar">
               <div>
@@ -521,7 +500,6 @@ export const AvailabilitySection: React.FC = () => {
         </div>
       </div>
 
-      {/* Guest Checkout & Terms Modal */}
       <TermsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
