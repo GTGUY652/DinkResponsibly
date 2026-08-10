@@ -1,7 +1,7 @@
 # Customer Front End UI
 
 **Workflow:** GA
-**Status:** in-progress
+**Status:** done
 
 ## Customer Landing & Booking UI
 
@@ -15,5 +15,5 @@ Design and build the customer facing landing page, court availability view, abou
   - [x] About us and venue information section (satisfies AC-4)
   - [x] Contact details and message form (satisfies AC-5)
   - [x] Floating ticket button and popup modal widget (satisfies AC-6)
-- [ ] Verify it: /check verify customer-frontend-ui
-- [ ] Test it: /test customer-frontend-ui
+- [x] Verify it: /check verify customer-frontend-ui
+- [x] Test it: /test customer-frontend-ui

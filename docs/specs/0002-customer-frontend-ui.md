@@ -1,7 +1,7 @@
 # 0002 Customer Front End View Specification
 
 **Date**: 2026-08-09
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 
