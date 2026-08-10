@@ -1,0 +1,345 @@
+.section-container {
+  padding: 5rem 0 2rem 0;
+}
+
+.section-header {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 3rem auto;
+}
+
+.section-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin: 0 0 0.75rem 0;
+}
+
+.section-subtitle {
+  color: #94a3b8;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.availability-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 868px) {
+  .availability-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card-box {
+  background-color: #1e293b;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #334155;
+}
+
+.card-title-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title-bar h3 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cal-month {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.cal-nav-btn {
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+}
+
+.calendar-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.3rem;
+}
+
+.cal-day-btn {
+  aspect-ratio: 1;
+  background: none;
+  border: 1px solid transparent;
+  color: #f8fafc;
+  border-radius: 0.4rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cal-day-btn:hover {
+  background-color: #334155;
+}
+
+.cal-day-btn.selected {
+  background-color: #a3e635;
+  color: #0b1329;
+  font-weight: 800;
+}
+
+.court-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.court-tab-btn {
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.court-tab-btn.active {
+  background-color: #a3e635;
+  color: #0b1329;
+  border-color: #a3e635;
+  font-weight: 700;
+}
+
+.court-tab-btn.inactive {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.maintenance-badge {
+  font-size: 0.7rem;
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.court-maintenance-alert {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.session-filter-container {
+  background-color: #0f172a;
+  padding: 1rem;
+  border-radius: 0.6rem;
+  border: 1px solid #334155;
+  margin-bottom: 1.5rem;
+}
+
+.session-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.session-tabs {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.session-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.session-tab-btn.active {
+  background-color: #a3e635;
+  color: #0b1329;
+  border-color: #a3e635;
+  font-weight: 700;
+}
+
+.timeline-instruction {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.spacious-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.slot-card-item {
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.6rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slot-card-item:hover:not(.booked) {
+  border-color: #a3e635;
+}
+
+.slot-card-item.in-range {
+  background-color: rgba(163, 230, 53, 0.12);
+  border-color: #a3e635;
+  box-shadow: 0 0 10px rgba(163, 230, 53, 0.2);
+}
+
+.slot-card-item.booked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.slot-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.slot-card-time {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.slot-card-rate {
+  font-size: 0.8rem;
+  color: #a3e635;
+  font-weight: 700;
+}
+
+.status-tag {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-tag.open {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.status-tag.open-selected {
+  background-color: #a3e635;
+  color: #0b1329;
+  font-weight: 800;
+}
+
+.status-tag.taken {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.booking-summary-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0f172a;
+  padding: 1rem 1.25rem;
+  border-radius: 0.6rem;
+  border: 1px solid #a3e635;
+}
+
+.booking-summary-bar.prompt {
+  border-color: #334155;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.floating-reset-corner-btn {
+  position: fixed;
+  top: 5rem;
+  right: 2rem;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #1e293b;
+  color: #a3e635;
+  border: 1px solid #a3e635;
+  padding: 0.6rem 1.2rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.floating-reset-corner-btn:hover {
+  transform: translateY(-2px);
+  background-color: #334155;
+}
+
+.booking-success-alert {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
