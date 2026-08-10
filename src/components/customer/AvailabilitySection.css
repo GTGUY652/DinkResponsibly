@@ -124,6 +124,9 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .court-tab-btn.active {
@@ -131,6 +134,33 @@
   color: #0b1329;
   border-color: #a3e635;
   font-weight: 700;
+}
+
+.court-tab-btn.inactive {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.maintenance-badge {
+  font-size: 0.7rem;
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.court-maintenance-alert {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
 }
 
 .session-filter-container {
@@ -300,4 +330,16 @@
 .floating-reset-corner-btn:hover {
   transform: translateY(-2px);
   background-color: #334155;
+}
+
+.booking-success-alert {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }

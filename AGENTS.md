@@ -26,6 +26,9 @@ npm run build
 # Preview build
 npm run preview
 
+# Run unit test suite
+npm test
+
 # Lint code
 npm run lint
 ```

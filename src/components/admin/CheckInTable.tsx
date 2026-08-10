@@ -1,93 +1,79 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../services/supabase';
-import { Search, Calendar, Filter, ExternalLink, RefreshCw, CheckCircle, Clock } from 'lucide-react';
+import { fetchAdminBookings, updateBookingStatus, deleteBookingRecord } from '../../services/bookingService';
+import type { BookingRecord } from '../../services/bookingService';
+import { Search, Calendar, Filter, RefreshCw, Clock, Trash2 } from 'lucide-react';
 import './CheckInTable.css';
 
-export interface BookingRecord {
-  id: string;
-  booking_reference: string;
-  guest_name: string;
-  guest_email: string;
-  guest_phone: string;
-  court_id: string;
-  start_time: string;
-  end_time: string;
-  total_price: number;
-  status: 'CONFIRMED' | 'CANCELLED';
-  created_at: string;
-  courts?: { name: string };
-  payments?: { receipt_url: string; payment_provider: string; amount: number }[];
-}
-
 export const CheckInTable: React.FC = () => {
-    const [bookings, setBookings] = useState<BookingRecord[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCourt, setSelectedCourt] = useState('ALL');
-    const [selectedDate, setSelectedDate] = useState('');
+  const [bookings, setBookings] = useState<BookingRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCourt, setSelectedCourt] = useState('ALL');
+  const [selectedDate, setSelectedDate] = useState('');
 
-    const fetchBookings = useCallback(async () => {
-        try {
-            const { data, error } = await supabase
-                .from('bookings')
-                .select(`
-                    *,
-                    courts ( name ),
-                    payments ( receipt_url, payment_provider, amount )
-                `)
-                .order('start_time', { ascending: false });
+  const fetchBookings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await fetchAdminBookings();
+      setBookings(data);
+    } catch (err) {
+      console.error('Error fetching bookings:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-            if (error) {
-                console.error('Error fetching bookings:', error.message);
-            } else if (data) {
-                setBookings(data as unknown as BookingRecord[]);
-            }
-            
-        } catch (err) {
-            console.error('Unexpected error fetching bookings:', err);
-        } finally {
-            setLoading(false);
+  useEffect(() => {
+    void fetchBookings();
+
+    const channel = supabase
+      .channel('realtime_admin_bookings')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bookings' },
+        () => {
+          void fetchBookings();
         }
-    }, []);
+      )
+      .subscribe();
 
-    useEffect(() => {
-        void fetchBookings();
-        
-        // Supabase Realtime Subscription
-        const channel = supabase
-        .channel('realtime_bookings')
-        .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'bookings' },
-            () => {
-                void fetchBookings();
-            }
-        )
-        .subscribe();
-        
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [fetchBookings]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchBookings]);
 
-  // Filter bookings based on search query, selected court, and date
-  const filteredBookings = bookings.filter((item) => {
-    const matchesSearch =
-      item.booking_reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.guest_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.guest_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.guest_phone.includes(searchQuery);
-    
-    const matchesCourt = selectedCourt === 'ALL' || item.courts?.name === selectedCourt;
-    
-    const matchesDate = !selectedDate || new Date(item.start_time).toISOString().split('T')[0] === selectedDate;
-    
-    return matchesSearch && matchesCourt && matchesDate;
-  });  
-  
-  const formatDate = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', {
+  const handleStatusChange = async (id: string, newStatus: 'confirmed' | 'checked_in' | 'cancelled') => {
+    try {
+      await updateBookingStatus(id, newStatus);
+      await fetchBookings();
+    } catch (err: any) {
+      alert(`Failed to update booking status: ${err.message}`);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to remove this booking record?')) {
+      try {
+        await deleteBookingRecord(id);
+        await fetchBookings();
+      } catch (err: any) {
+        alert(`Failed to delete record: ${err.message}`);
+      }
+    }
+  };
+
+  const formatHourLabel = (hour: number): string => {
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h12 = hour % 12 === 0 ? 12 : hour % 12;
+    return `${h12}:00 ${ampm}`;
+  };
+
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return dateObj.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -95,35 +81,37 @@ export const CheckInTable: React.FC = () => {
     });
   };
 
-  const formatTime = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
+  const filteredBookings = bookings.filter((item) => {
+    const query = searchQuery.toLowerCase();
+    const matchesSearch =
+      item.booking_code.toLowerCase().includes(query) ||
+      item.guest_name.toLowerCase().includes(query) ||
+      item.guest_email.toLowerCase().includes(query) ||
+      item.guest_phone.includes(query);
+
+    const matchesCourt = selectedCourt === 'ALL' || item.court_id === selectedCourt;
+    const matchesDate = !selectedDate || item.booking_date === selectedDate;
+
+    return matchesSearch && matchesCourt && matchesDate;
+  });
 
   return (
     <div className="table-wrapper">
       <div className="table-header-controls">
-        
         <div className="search-bar-group">
           <Search className="search-icon" />
           <input
             type="text"
-            placeholder="Search by Reference (e.g. PB-8942A), Guest Name, or Phone..."
+            placeholder="Search by Code (e.g. DR-8X9K2L), Guest Name, or Phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
           />
         </div>
-        
+
         <div className="filter-controls">
-          
           <div className="select-group">
             <Filter className="filter-icon" />
-            
             <select
               value={selectedCourt}
               onChange={(e) => setSelectedCourt(e.target.value)}
@@ -134,10 +122,9 @@ export const CheckInTable: React.FC = () => {
               <option value="Court B">Court B</option>
               <option value="Court C">Court C</option>
               <option value="Court D">Court D</option>
-            
             </select>
           </div>
-          
+
           <div className="date-group">
             <Calendar className="date-icon" />
             <input
@@ -147,91 +134,84 @@ export const CheckInTable: React.FC = () => {
               className="date-input"
             />
           </div>
-          
+
           <button onClick={fetchBookings} className="refresh-btn" title="Refresh table">
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-        
         </div>
       </div>
-      
+
       <div className="table-container">
-        
         {loading && bookings.length === 0 ? (
-          <div className="table-empty">Loading bookings...</div>
+          <div className="table-empty">Loading reservations...</div>
         ) : filteredBookings.length === 0 ? (
-          <div className="table-empty">No paid bookings found matching your search.</div>
+          <div className="table-empty">No active court reservations found matching your search.</div>
         ) : (
           <table className="custom-table">
             <thead>
               <tr>
-                <th>Reference Code</th>
+                <th>Booking Code</th>
                 <th>Guest Details</th>
                 <th>Court</th>
-                <th>Reserved Time</th>
-                <th>Total Paid</th>
-                <th>Status</th>
-                <th>Receipt</th>
+                <th>Date & Playing Time</th>
+                <th>Total Price</th>
+                <th>Check-in Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredBookings.map((b) => {
-                const receiptUrl = b.payments?.[0]?.receipt_url;
-                return (
-                  <tr key={b.id}>
-                    <td>
-                      <span className="ref-badge">{b.booking_reference}</span>
-                    </td>
-                    <td>
-                      <div className="guest-info">
-                        <span className="guest-name">{b.guest_name}</span>
-                        <span className="guest-sub">{b.guest_email} • {b.guest_phone}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="court-tag">{b.courts?.name || 'Court'}</span>
-                    </td>
-                    <td>
-                      <div className="time-info">
-                        <span className="date-text">{formatDate(b.start_time)}</span>
-                        <span className="slot-text">
-                          <Clock className="w-3 h-3 inline mr-1" />
-                          {formatTime(b.start_time)} - {formatTime(b.end_time)}
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="amount-text">₱{b.total_price.toFixed(2)}</span>
-                    </td>
-                    <td>
-                      <span className={`status-pill ${b.status.toLowerCase()}`}>
-                        <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                        {b.status}
+              {filteredBookings.map((b) => (
+                <tr key={b.id}>
+                  <td>
+                    <span className="ref-badge">{b.booking_code}</span>
+                  </td>
+                  <td>
+                    <div className="guest-info">
+                      <span className="guest-name">{b.guest_name}</span>
+                      <span className="guest-sub">{b.guest_email} &bull; {b.guest_phone}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="court-tag">{b.court_id}</span>
+                  </td>
+                  <td>
+                    <div className="time-info">
+                      <span className="date-text">{formatDateDisplay(b.booking_date)}</span>
+                      <span className="slot-text">
+                        <Clock className="w-3 h-3 inline mr-1" />
+                        {formatHourLabel(b.start_hour)} - {formatHourLabel(b.end_hour)} ({b.duration_hours}h)
                       </span>
-                    </td>
-                    <td>
-                      {receiptUrl ? (
-                        <a
-                          href={receiptUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="receipt-link"
-                          title="View PayMongo Digital Receipt"
-                        >
-                          Receipt <ExternalLink className="w-3 h-3 ml-1 inline" />
-                        </a>
-                      ) : (
-                        <span className="no-receipt">Paid via PayMongo</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                    </div>
+                  </td>
+                  <td>
+                    <span className="amount-text">₱{Number(b.total_price).toFixed(2)}</span>
+                  </td>
+                  <td>
+                    <select
+                      value={b.status}
+                      onChange={(e) => handleStatusChange(b.id!, e.target.value as any)}
+                      className={`status-select ${b.status}`}
+                    >
+                      <option value="confirmed">Confirmed</option>
+                      <option value="checked_in">Checked In</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleDelete(b.id!)}
+                      className="delete-action-btn"
+                      title="Delete Reservation"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
       </div>
     </div>
   );
-
-}
+};
