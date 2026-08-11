@@ -1,30 +1,64 @@
 .customer-landing-root {
   min-height: 100vh;
-  background-color: #0b1329;
-  color: #f8fafc;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--bg-obsidian);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Ambient Background Lighting Blobs */
+.customer-landing-root::before {
+  content: '';
+  position: absolute;
+  top: -150px;
+  left: 15%;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(163, 230, 53, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.customer-landing-root::after {
+  content: '';
+  position: absolute;
+  top: 800px;
+  right: 10%;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.07) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .customer-main-content {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 6rem 1.5rem;
+  padding: 1.5rem 2rem 6rem 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .text-accent {
-  color: #a3e635;
+  color: var(--accent-lime);
 }
 
 .brand-accent {
-  background: linear-gradient(135deg, #a3e635 0%, #10b981 100%);
+  background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-emerald) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .customer-footer {
+  position: relative;
+  z-index: 1;
   text-align: center;
-  padding: 2rem;
-  color: #64748b;
-  font-size: 0.85rem;
-  border-top: 1px solid #1e293b;
+  padding: 3rem 2rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  background: rgba(7, 11, 20, 0.9);
+  border-top: 1px solid var(--glass-border);
 }

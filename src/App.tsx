@@ -7,6 +7,7 @@ import { RateController } from './components/admin/RateController';
 import { TicketPortal } from './components/admin/TicketPortal';
 import { StaffManager } from './components/admin/StaffManager';
 import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft } from 'lucide-react';
+import './App.css';
 
 const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBackToCustomer }) => {
   const { user, profile, loading, signOut } = useAuth();
@@ -25,45 +26,28 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '2rem' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: '#1e293b', padding: '1rem 2rem', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+    <div className="admin-portal-wrapper">
+      <header className="admin-header">
         <div>
-          <button
-            onClick={onBackToCustomer}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: 'none', color: '#a3e635', cursor: 'pointer', marginBottom: '0.5rem', fontWeight: 600 }}
-          >
+          <button onClick={onBackToCustomer} className="admin-back-btn">
             <ArrowLeft size={16} /> Back to Public Site
           </button>
-          <h1 style={{ fontSize: '1.5rem', margin: 0, color: '#f8fafc' }}>DinkResponsibly Admin Portal</h1>
-          <p style={{ margin: '0.25rem 0 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>
-            Logged in as: <strong style={{ color: '#10b981' }}>{profile?.full_name || user.email}</strong> ({profile?.role || 'STAFF'})
+          <h1 className="admin-title">DinkResponsibly Admin Portal</h1>
+          <p className="admin-user-info">
+            Logged in as: <strong>{profile?.full_name || user.email}</strong> ({profile?.role || 'STAFF'})
           </p>
         </div>
-        <button
-          onClick={signOut}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#ef4444', color: '#ffffff', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600 }}
-        >
+        <button onClick={signOut} className="admin-signout-btn">
           <LogOut size={16} />
           Sign Out
         </button>
       </header>
 
       {/* Navigation Tabs */}
-      <nav style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      <nav className="admin-nav-bar">
         <button
           onClick={() => setActiveTab('CHECKIN')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.75rem 1.25rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            fontWeight: 600,
-            cursor: 'pointer',
-            background: activeTab === 'CHECKIN' ? '#10b981' : '#1e293b',
-            color: activeTab === 'CHECKIN' ? '#022c22' : '#94a3b8',
-          }}
+          className={`admin-tab-btn ${activeTab === 'CHECKIN' ? 'active' : ''}`}
         >
           <ListCheck size={18} />
           Check-in Log
@@ -71,18 +55,7 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
 
         <button
           onClick={() => setActiveTab('RATES')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.75rem 1.25rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            fontWeight: 600,
-            cursor: 'pointer',
-            background: activeTab === 'RATES' ? '#10b981' : '#1e293b',
-            color: activeTab === 'RATES' ? '#022c22' : '#94a3b8',
-          }}
+          className={`admin-tab-btn ${activeTab === 'RATES' ? 'active' : ''}`}
         >
           <SlidersHorizontal size={18} />
           Court Rates & Toggles
@@ -90,18 +63,7 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
 
         <button
           onClick={() => setActiveTab('TICKETS')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.75rem 1.25rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            fontWeight: 600,
-            cursor: 'pointer',
-            background: activeTab === 'TICKETS' ? '#10b981' : '#1e293b',
-            color: activeTab === 'TICKETS' ? '#022c22' : '#94a3b8',
-          }}
+          className={`admin-tab-btn ${activeTab === 'TICKETS' ? 'active' : ''}`}
         >
           <MessageSquareText size={18} />
           Support Inquiries
@@ -109,18 +71,7 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
 
         <button
           onClick={() => setActiveTab('STAFF')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.75rem 1.25rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            fontWeight: 600,
-            cursor: 'pointer',
-            background: activeTab === 'STAFF' ? '#10b981' : '#1e293b',
-            color: activeTab === 'STAFF' ? '#022c22' : '#94a3b8',
-          }}
+          className={`admin-tab-btn ${activeTab === 'STAFF' ? 'active' : ''}`}
         >
           <Users size={18} />
           Staff Management
