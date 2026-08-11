@@ -15,7 +15,7 @@ The booking engine operates on a direct guest checkout model where customers mak
 ### Acceptance Criteria
 
 - **AC-1**: Authenticated access restricted to authorized accounts via Supabase Auth with custom user metadata roles (`OWNER` vs `STAFF`).
-- **AC-2**: Default landing view displays a real-time table of all paid court reservations showing guest name, email, phone number, booking reference code, court name, date, reserved hours, total price, payment channel, and direct link to the official PayMongo Digital Receipt.
+- **AC-2**: Default landing view displays a real-time table of all court reservations showing guest name, email, phone number, booking reference code, court name, date, reserved hours, total price, payment channel, check-in status, and modal viewer for the uploaded payment receipt screenshot.
 - **AC-3**: Instant venue check-in search bar and filter allowing staff to locate bookings by reference code (for example `PB-8942A`), guest name, or date.
 - **AC-4**: Real-time status indicators showing live payment status (`CONFIRMED` in green).
 - **AC-5**: Owner exclusive Court Rate and Operational Status Controller allowing live updates to weekday daytime rates (₱400 per hour), weekday nighttime rates (₱500 per hour), weekend flat rates (₱500 per hour), and active court toggles.
