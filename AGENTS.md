@@ -58,7 +58,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`.
 
 ## Context files
 
-- [src/components/admin/AGENTS.md](src/components/admin/AGENTS.md): Admin Dashboard presentation components for check-in, dynamic rates, support tickets, and staff management
+- [src/components/admin/AGENTS.md](src/components/admin/AGENTS.md): Admin Dashboard presentation components for check-in, dynamic rates, support tickets, staff management, and revenue overview
 - [src/components/customer/AGENTS.md](src/components/customer/AGENTS.md): Presentational components for customer landing, interactive court booking availability, about us, contact form, and floating support ticket modal
 - [supabase/functions/AGENTS.md](supabase/functions/AGENTS.md): Supabase serverless edge functions for availability, PayMongo payments, Resend emails, and Gemini AI
 

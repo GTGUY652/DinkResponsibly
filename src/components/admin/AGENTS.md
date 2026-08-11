@@ -12,6 +12,7 @@ Presentation layer components powering the DinkResponsibly Admin Dashboard. Prov
 | `RateController.tsx` | Owner-exclusive court hourly rate controller and active court toggle state |
 | `TicketPortal.tsx` | Customer support ticket browser and direct email response modal using Resend edge function |
 | `StaffManager.tsx` | Owner-exclusive staff account creation and deactivation interface |
+| `RevenueOverview.tsx` | Real-time financial dashboard with KPI cards, unit economics, Recharts trend graph, and CSV export |
 
 ## Conventions
 
