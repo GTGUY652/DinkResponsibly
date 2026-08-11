@@ -6,12 +6,13 @@ import { CheckInTable } from './components/admin/CheckInTable';
 import { RateController } from './components/admin/RateController';
 import { TicketPortal } from './components/admin/TicketPortal';
 import { StaffManager } from './components/admin/StaffManager';
-import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft } from 'lucide-react';
+import { RevenueOverview } from './components/admin/RevenueOverview';
+import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft, DollarSign } from 'lucide-react';
 import './App.css';
 
 const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBackToCustomer }) => {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF'>('CHECKIN');
+  const [activeTab, setActiveTab] = useState<'REVENUE' | 'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF'>('REVENUE');
 
   if (loading) {
     return (
@@ -46,6 +47,14 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
       {/* Navigation Tabs */}
       <nav className="admin-nav-bar">
         <button
+          onClick={() => setActiveTab('REVENUE')}
+          className={`admin-tab-btn ${activeTab === 'REVENUE' ? 'active' : ''}`}
+        >
+          <DollarSign size={18} />
+          Revenue Overview
+        </button>
+
+        <button
           onClick={() => setActiveTab('CHECKIN')}
           className={`admin-tab-btn ${activeTab === 'CHECKIN' ? 'active' : ''}`}
         >
@@ -79,6 +88,7 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
       </nav>
 
       {/* Active View */}
+      {activeTab === 'REVENUE' && <RevenueOverview />}
       {activeTab === 'CHECKIN' && <CheckInTable />}
       {activeTab === 'RATES' && <RateController />}
       {activeTab === 'TICKETS' && <TicketPortal />}
