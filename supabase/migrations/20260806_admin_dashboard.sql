@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS public.court_pricing_rules (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Create Bookings Table
+-- 4. Create Bookings Table (Direct QR Payment & Receipt Screenshot Upload)
 CREATE TABLE IF NOT EXISTS public.bookings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_reference TEXT NOT NULL UNIQUE,
@@ -39,24 +39,13 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ NOT NULL,
   total_price NUMERIC(10, 2) NOT NULL,
-  status TEXT NOT NULL DEFAULT 'CONFIRMED' CHECK (status IN ('CONFIRMED', 'CANCELLED')),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 5. Create Payments Table
-CREATE TABLE IF NOT EXISTS public.payments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  booking_id UUID NOT NULL REFERENCES public.bookings(id) ON DELETE CASCADE,
-  payment_provider TEXT NOT NULL DEFAULT 'paymongo',
-  payment_intent_id TEXT NOT NULL UNIQUE,
+  payment_method TEXT NOT NULL DEFAULT 'GCASH' CHECK (payment_method IN ('GCASH', 'MAYA', 'CASH', 'BANK_TRANSFER')),
   receipt_url TEXT,
-  amount NUMERIC(10, 2) NOT NULL,
-  status TEXT NOT NULL CHECK (status IN ('PAID', 'REFUNDED')),
-  payload JSONB,
+  status TEXT NOT NULL DEFAULT 'PENDING_VERIFICATION' CHECK (status IN ('PENDING_VERIFICATION', 'APPROVED', 'REJECTED', 'CANCELLED', 'CONFIRMED')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. Create Support Tickets Table
+-- 5. Create Support Tickets Table
 CREATE TABLE IF NOT EXISTS public.support_tickets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_reference TEXT NOT NULL UNIQUE,
@@ -71,7 +60,7 @@ CREATE TABLE IF NOT EXISTS public.support_tickets (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 7. Seed Initial Courts (Court A, Court B, Court C, Court D)
+-- 6. Seed Initial Courts (Court A, Court B, Court C, Court D)
 INSERT INTO public.courts (name, description, hourly_rate, is_active)
 VALUES 
   ('Court A', 'Outdoor Court with professional pickleball surface', 400.00, TRUE),
@@ -80,12 +69,16 @@ VALUES
   ('Court D', 'Covered Court with LED lighting', 400.00, TRUE)
 ON CONFLICT (name) DO NOTHING;
 
+-- 7. Setup Storage Bucket for Payment Receipt Screenshots
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('payment-receipts', 'payment-receipts', true)
+ON CONFLICT (id) DO NOTHING;
+
 -- 8. Enable Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.court_pricing_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
 
 -- 9. Create RLS Policies
@@ -98,16 +91,14 @@ CREATE POLICY "Allow public read courts" ON public.courts FOR SELECT USING (true
 CREATE POLICY "Allow owner write courts" ON public.courts FOR ALL
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'OWNER'));
 
--- Bookings: Staff and Owner read all, Public insert via edge functions
+-- Bookings: Staff and Owner read & update, Public insert
 CREATE POLICY "Allow admin read bookings" ON public.bookings FOR SELECT
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('OWNER', 'STAFF')));
+CREATE POLICY "Allow admin update bookings" ON public.bookings FOR UPDATE
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('OWNER', 'STAFF')));
 CREATE POLICY "Allow public insert bookings" ON public.bookings FOR INSERT WITH CHECK (true);
 
--- Payments: Staff and Owner read all
-CREATE POLICY "Allow admin read payments" ON public.payments FOR SELECT
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('OWNER', 'STAFF')));
-
--- Support Tickets: Admin read and update
+-- Support Tickets: Admin read and update, Public insert
 CREATE POLICY "Allow admin read support_tickets" ON public.support_tickets FOR SELECT
   USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('OWNER', 'STAFF')));
 CREATE POLICY "Allow admin update support_tickets" ON public.support_tickets FOR UPDATE

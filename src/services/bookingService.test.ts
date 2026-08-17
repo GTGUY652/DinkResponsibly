@@ -7,6 +7,8 @@ import {
   fetchAdminBookings,
   updateBookingStatus,
   deleteBookingRecord,
+  calculateRevenueOverviewMetrics,
+  fetchRevenueOverviewData,
 } from './bookingService';
 import type { BookingRecord, CourtRecord } from './bookingService';
 import { supabase } from './supabase';
@@ -238,6 +240,134 @@ describe('bookingService', () => {
 
       await deleteBookingRecord('uuid-123');
       expect(supabase.from).toHaveBeenCalledWith('bookings');
+    });
+  });
+
+  describe('Spec 0005: Revenue Overview & Financials (AC-1, AC-2, AC-3, AC-4)', () => {
+    const mockBookings: BookingRecord[] = [
+      {
+        id: '1',
+        booking_code: 'DR-100',
+        court_id: 'Court A',
+        booking_date: '2026-08-10',
+        start_hour: 10,
+        end_hour: 11,
+        duration_hours: 1,
+        total_price: 400,
+        guest_name: 'Alice',
+        guest_email: 'alice@test.com',
+        guest_phone: '1234567890',
+        status: 'confirmed',
+      },
+      {
+        id: '2',
+        booking_code: 'DR-101',
+        court_id: 'Court A',
+        booking_date: '2026-08-10',
+        start_hour: 17,
+        end_hour: 18,
+        duration_hours: 1,
+        total_price: 500,
+        guest_name: 'Bob',
+        guest_email: 'bob@test.com',
+        guest_phone: '1234567890',
+        status: 'checked_in',
+      },
+      {
+        id: '3',
+        booking_code: 'DR-102',
+        court_id: 'Court B',
+        booking_date: '2026-08-09',
+        start_hour: 14,
+        end_hour: 15,
+        duration_hours: 1,
+        total_price: 400,
+        guest_name: 'Charlie',
+        guest_email: 'charlie@test.com',
+        guest_phone: '1234567890',
+        status: 'confirmed',
+      },
+      {
+        id: '4',
+        booking_code: 'DR-103',
+        court_id: 'Court A',
+        booking_date: '2026-08-08',
+        start_hour: 9,
+        end_hour: 10,
+        duration_hours: 1,
+        total_price: 400,
+        guest_name: 'David',
+        guest_email: 'david@test.com',
+        guest_phone: '1234567890',
+        status: 'cancelled',
+      },
+    ];
+
+    const refDate = new Date('2026-08-10T12:00:00Z');
+
+    it('AC-1: should calculate Today, Week, Month, and YTD revenue aggregates with growth indicators', () => {
+      const metrics = calculateRevenueOverviewMetrics(mockBookings, 'this_month', 'all', 'month', refDate);
+
+      // Today (2026-08-10): DR-100 (400) + DR-101 (500) = 900
+      expect(metrics.todayRevenue).toBe(900);
+      // Yesterday (2026-08-09): DR-102 (400) -> Growth = ((900-400)/400)*100 = 125%
+      expect(metrics.todayGrowthPct).toBe(125);
+
+      // Week revenue includes 2026-08-10 (900) + 2026-08-09 (400) = 1300
+      expect(metrics.weekRevenue).toBe(1300);
+
+      // Month revenue (Aug 2026) = 1300
+      expect(metrics.monthRevenue).toBe(1300);
+
+      // YTD revenue (2026) = 1300
+      expect(metrics.ytdRevenue).toBe(1300);
+    });
+
+    it('AC-2: should compute Average Booking Value (ABV), Pending Balances, and Refunds', () => {
+      const metrics = calculateRevenueOverviewMetrics(mockBookings, 'this_month', 'all', 'month', refDate);
+
+      // Active bookings count: 3 (DR-100, DR-101, DR-102), total rev = 1300. ABV = 1300 / 3 = 433.33
+      expect(metrics.abv).toBe(433.33);
+
+      // Pending balance (confirmed bookings: DR-100 [400] + DR-102 [400]) = 800
+      expect(metrics.pendingBalance).toBe(800);
+
+      // Refunds & Adjustments (cancelled booking DR-103 total price) = 400
+      expect(metrics.refundsTotal).toBe(400);
+    });
+
+    it('AC-3: should format trend chart points by specified granularity', () => {
+      const dayMetrics = calculateRevenueOverviewMetrics(mockBookings, 'this_month', 'all', 'day', refDate);
+      expect(dayMetrics.trendChartData).toBeDefined();
+      expect(dayMetrics.trendChartData.length).toBeGreaterThan(0);
+
+      const monthMetrics = calculateRevenueOverviewMetrics(mockBookings, 'this_month', 'all', 'month', refDate);
+      expect(monthMetrics.trendChartData[0].label).toBe('Aug');
+      expect(monthMetrics.trendChartData[0].revenue).toBe(1300);
+    });
+
+    it('AC-4: should filter metrics by Court ID', () => {
+      const courtAMetrics = calculateRevenueOverviewMetrics(mockBookings, 'this_month', 'Court A', 'month', refDate);
+
+      // Court A active bookings: DR-100 (400) + DR-101 (500) = 900
+      expect(courtAMetrics.todayRevenue).toBe(900);
+      expect(courtAMetrics.monthRevenue).toBe(900);
+      expect(courtAMetrics.abv).toBe(450);
+    });
+
+    it('fetchRevenueOverviewData: should orchestrate Supabase fetch and return metric payload', async () => {
+      const selectMock = vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({ data: mockBookings, error: null }),
+        }),
+      });
+
+      (supabase.from as any).mockReturnValue({ select: selectMock });
+
+      const res = await fetchRevenueOverviewData('this_month', 'all', 'month');
+      expect(supabase.from).toHaveBeenCalledWith('bookings');
+      expect(res.todayRevenue).toBeGreaterThanOrEqual(0);
+      expect(res.trendChartData).toBeDefined();
     });
   });
 });

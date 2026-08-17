@@ -54,12 +54,12 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`.
 - All cross boundary communication uses plain objects or DTOs. No domain entities leak into presentation layer.
 - Tests: domain and application layers are unit tested with no mocks of infrastructure. Infrastructure is integration tested against real systems.
 - Booking business rules: 4 Courts managed simultaneously (Court A, Court B, Court C, Court D). Bookings enforce strict 1-hour slots. Dynamic pricing applies (Weekdays 6:00 AM to 4:00 PM at 400 PHP per hour, Weekdays 5:00 PM to 2:00 AM at 500 PHP per hour, Weekends 6:00 AM to 2:00 AM flat rate 500 PHP per hour). Direct guest checkout without requiring customer accounts.
-- Edge Functions vs Client SDK rule: Direct DB operations use `src/services/bookingService.ts` via `@supabase/supabase-js`. Edge Functions in `supabase/functions/` are reserved for PayMongo payments (`paymongo-checkout`, `paymongo-webhook`), Resend emails (`send-email`), and Gemini AI (`gemini-advisor`).
+- Edge Functions vs Client SDK rule: Direct DB operations, slot availability, and receipt image uploads use `src/services/bookingService.ts` via `@supabase/supabase-js`. Edge Functions in `supabase/functions/` are reserved for Resend emails (`send-email`) and Gemini AI (`gemini-advisor`).
 
 ## Context files
 
-- [src/components/admin/AGENTS.md](src/components/admin/AGENTS.md): Admin Dashboard presentation components for check-in, dynamic rates, support tickets, and staff management
-- [src/components/customer/AGENTS.md](src/components/customer/AGENTS.md): Presentational components for customer landing, interactive court booking availability, about us, contact form, and floating support ticket modal
-- [supabase/functions/AGENTS.md](supabase/functions/AGENTS.md): Supabase serverless edge functions for availability, PayMongo payments, Resend emails, and Gemini AI
+- [src/components/admin/AGENTS.md](src/components/admin/AGENTS.md): Admin Dashboard presentation components for check-in, receipt image lightbox viewing, dynamic rates, support tickets, staff management, and revenue overview
+- [src/components/customer/AGENTS.md](src/components/customer/AGENTS.md): Presentational components for customer landing, interactive court booking availability, QR code payment modal with receipt screenshot upload, about us, contact form, and floating support ticket modal
+- [supabase/functions/AGENTS.md](supabase/functions/AGENTS.md): Supabase serverless edge functions for Resend emails and Gemini AI
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
