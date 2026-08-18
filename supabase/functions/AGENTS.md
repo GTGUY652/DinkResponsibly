@@ -35,8 +35,10 @@ supabase functions deploy <function-name>
 
 - Every function runs on Deno runtime inside `supabase/functions/`.
 - All CORS requests must handle OPTIONS preflight calls using `_shared/cors.ts`.
+- **Security**: Never trust client inputs directly in Edge Functions. Validate all data using a schema validation library like `zod` before processing.
 
 ## Gotchas
 
 - Deno imports require explicit URL or file extensions.
-- Secret environment variables (`PAYMONGO_WEBHOOK_SECRET`, `RESEND_API_KEY`, `GEMINI_API_KEY`) must be set via Supabase secrets CLI or dashboard.
+- Secret environment variables (`RESEND_API_KEY`, `GEMINI_API_KEY`) must be set via Supabase secrets CLI or dashboard. (Note: The project no longer uses PayMongo.)
+- Remember to properly handle JSON parsing errors defensively to prevent edge function crashes.

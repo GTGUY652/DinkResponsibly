@@ -258,25 +258,36 @@ export const AvailabilitySection: React.FC = () => {
 
     const targetCourtId = activeCourtRecord?.id || selectedCourt;
 
-    await createBooking({
-      booking_code: bookingCode,
-      court_id: targetCourtId,
-      booking_date: formattedDateStr,
-      start_hour: startHour,
-      end_hour: effectiveEnd,
-      duration_hours: summary.duration,
-      total_price: summary.totalPrice,
-      guest_name: guestDetails.name,
-      guest_email: guestDetails.email,
-      guest_phone: guestDetails.phone,
-      status: 'confirmed',
-    });
+    try {
+      await createBooking({
+        booking_code: bookingCode,
+        court_id: targetCourtId,
+        booking_date: formattedDateStr,
+        start_hour: startHour,
+        end_hour: effectiveEnd,
+        duration_hours: summary.duration,
+        total_price: summary.totalPrice,
+        guest_name: guestDetails.name,
+        guest_email: guestDetails.email,
+        guest_phone: guestDetails.phone,
+        status: 'confirmed',
+      });
 
-    setBookingSuccessCode(bookingCode);
-    setIsModalOpen(false);
-    setStartHour(null);
-    setEndHour(null);
-    await loadAvailability();
+      setBookingSuccessCode(bookingCode);
+      setIsModalOpen(false);
+      setStartHour(null);
+      setEndHour(null);
+      await loadAvailability();
+    } catch (err: any) {
+      // 1. Catch the double-booking error!
+      setErrorMessage(err.message);
+      
+      // 2. Close the modal, reset their selection, and fetch fresh availability
+      setIsModalOpen(false);
+      setStartHour(null);
+      setEndHour(null);
+      await loadAvailability();
+    }
   };
 
   const availableCourtsDisplay = courtsList.length > 0 ? courtsList : [
