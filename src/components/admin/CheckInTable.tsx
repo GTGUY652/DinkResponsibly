@@ -225,10 +225,12 @@ export const CheckInTable: React.FC = () => {
                       value={b.status}
                       onChange={(e) => handleStatusChange(b.id!, e.target.value as any)}
                       className={`status-select ${b.status}`}
+                      disabled={b.status === 'APPROVED'}
+                      style={{ cursor: b.status === 'APPROVED' ? 'not-allowed' : 'pointer' }}
                     >
-                      <option value="confirmed">Confirmed</option>
-                      <option value="checked_in">Checked In</option>
-                      <option value="cancelled">Cancelled</option>
+                      <option value="PENDING_VERIFICATION">Pending Verification</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
                     </select>
                   </td>
                   <td>

@@ -251,7 +251,7 @@ export const AvailabilitySection: React.FC = () => {
 
   const summary = calculateSummary();
 
-  const handleConfirmBooking = async (guestDetails: { name: string; email: string; phone: string }) => {
+  const handleConfirmBooking = async (guestDetails: { name: string; email: string; phone: string; referenceLast4: string; receiptUrl: string }) => {
     if (startHour === null || !isCourtOperational) return;
     const effectiveEnd = endHour !== null ? endHour : startHour + 1;
     const bookingCode = generateBookingCode();
@@ -270,7 +270,9 @@ export const AvailabilitySection: React.FC = () => {
         guest_name: guestDetails.name,
         guest_email: guestDetails.email,
         guest_phone: guestDetails.phone,
-        status: 'confirmed',
+        payment_reference_last4: guestDetails.referenceLast4,
+        receipt_url: guestDetails.receiptUrl,
+        status: 'PENDING_VERIFICATION',
       });
 
       setBookingSuccessCode(bookingCode);
@@ -279,10 +281,7 @@ export const AvailabilitySection: React.FC = () => {
       setEndHour(null);
       await loadAvailability();
     } catch (err: any) {
-      // 1. Catch the double-booking error!
       setErrorMessage(err.message);
-      
-      // 2. Close the modal, reset their selection, and fetch fresh availability
       setIsModalOpen(false);
       setStartHour(null);
       setEndHour(null);

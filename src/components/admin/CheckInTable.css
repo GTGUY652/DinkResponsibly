@@ -205,22 +205,31 @@
   outline: none;
 }
 
-.status-select.confirmed {
-  background: rgba(16, 185, 129, 0.15);
+.status-select option {
+  background: #1e293b;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.status-select.PENDING_VERIFICATION {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.status-select.APPROVED {
+  background: rgba(16, 185, 129, 0.2);
   color: #34d399;
-  border-color: rgba(16, 185, 129, 0.4);
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
 }
 
-.status-select.checked_in {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border-color: rgba(59, 130, 246, 0.4);
-}
-
-.status-select.cancelled {
-  background: rgba(239, 68, 68, 0.15);
+.status-select.REJECTED {
+  background: rgba(239, 68, 68, 0.2);
   color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
 }
 
 .receipt-action-btn {

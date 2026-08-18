@@ -23,7 +23,9 @@ export interface BookingRecord {
   guest_name: string;
   guest_email: string;
   guest_phone: string;
-  status: 'confirmed' | 'checked_in' | 'cancelled';
+  status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'cancelled' | 'confirmed' | 'checked_in';
+  payment_reference_last4?: string;
+  receipt_url?: string;
   created_at?: string;
   payments?: PaymentRecord[];
 }
@@ -38,6 +40,28 @@ export interface CourtRecord {
   weekend_rate: number;
   is_active: boolean;
 }
+
+export const uploadPaymentReceipt = async (file: File): Promise<string> => {
+  // Create a unique file name to avoid collisions
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+  const filePath = `receipts/${fileName}`;
+
+  const { data, error } = await supabase.storage
+    .from('payment-receipts')
+    .upload(filePath, file);
+
+  if (error) {
+    throw new Error(`Failed to upload receipt: ${error.message}`);
+  }
+
+  // Get the public URL for the uploaded file so the Admin dashboard can view it
+  const { data: publicUrlData } = supabase.storage
+    .from('payment-receipts')
+    .getPublicUrl(filePath);
+
+  return publicUrlData.publicUrl;
+};
 
 export const generateBookingCode = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -99,22 +123,20 @@ export const createBooking = async (
   booking: Omit<BookingRecord, 'id' | 'created_at'>
 ): Promise<BookingRecord> => {
 
-  const { data, error } = await supabase
+  // Removed .select().single() so we don't trigger the read-security block!
+  const { error } = await supabase
     .from('bookings')
-    .insert([booking])
-    .select()
-    .single();
+    .insert([booking]);
 
   if (error) {
-
     if (error.code === '23P04' || error.message.includes('overlap') || error.message.includes('exclude')) {
       throw new Error('This court slot has already been reserved by another player.');
     }
-
     throw new Error(error.message);
   }
 
-  return data as BookingRecord;
+  // We already have the booking_code locally, so we can just return what we sent
+  return booking as BookingRecord;
 };
 
 export const fetchAdminBookings = async (): Promise<BookingRecord[]> => {
@@ -137,7 +159,7 @@ export const fetchAdminBookings = async (): Promise<BookingRecord[]> => {
 
 export const updateBookingStatus = async (
   id: string,
-  status: 'confirmed' | 'checked_in' | 'cancelled'
+  status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'cancelled' | 'confirmed' | 'checked_in'
 ): Promise<void> => {
   const { error } = await supabase
     .from('bookings')

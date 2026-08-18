@@ -1,7 +1,6 @@
 import React from 'react';
-import { X, Printer, ExternalLink, CheckCircle2, ShieldCheck, Building2, User, Calendar, Clock, DollarSign } from 'lucide-react';
+import { X, FileText, Image as ImageIcon } from 'lucide-react';
 import type { BookingRecord } from '../../services/bookingService';
-import './ReceiptModal.css';
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -12,162 +11,65 @@ interface ReceiptModalProps {
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, booking }) => {
   if (!isOpen || !booking) return null;
 
-  const paymentRecord = booking.payments && booking.payments.length > 0 ? booking.payments[0] : null;
-  const paymentMethod = paymentRecord?.payment_provider
-    ? paymentRecord.payment_provider.toUpperCase()
-    : 'ON-SITE CASH / FACILITY CHECK-IN';
-
-  const formatHourLabel = (hour: number): string => {
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const h12 = hour % 12 === 0 ? 12 : hour % 12;
-    return `${h12}:00 ${ampm}`;
-  };
-
-  const formatDateDisplay = (dateStr: string) => {
-    if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-');
-    const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return dateObj.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
-    <div className="receipt-modal-overlay" onClick={onClose}>
-      <div className="receipt-modal-container" onClick={(e) => e.stopPropagation()}>
-        {/* Modal Header Controls */}
-        <div className="receipt-modal-actions no-print">
-          <button onClick={handlePrint} className="receipt-btn-print">
-            <Printer size={16} /> Print / Save PDF
-          </button>
-          {paymentRecord?.receipt_url && (
-            <a
-              href={paymentRecord.receipt_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="receipt-btn-external"
-            >
-              <ExternalLink size={16} /> PayMongo Web Receipt
-            </a>
-          )}
-          <button onClick={onClose} className="receipt-btn-close">
-            <X size={18} />
+    <div onClick={onClose} style={{ zIndex: 1000, position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: '#0f172a', width: '90%', maxWidth: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #334155' }}>
+        
+        {/* Header */}
+        <div style={{ padding: '1rem', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
+            <FileText size={18} /> Receipt Verification
+          </h3>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+            <X size={20} />
           </button>
         </div>
 
-        {/* Printable Receipt Body */}
-        <div className="receipt-paper" id="printable-receipt">
-          {/* Header Branding */}
-          <div className="receipt-brand-header">
-            <div className="receipt-logo">
-              <Building2 size={28} className="receipt-logo-icon" />
-              <div>
-                <h2>DinkResponsibly</h2>
-                <p>Premier Pickleball Court Facility</p>
-              </div>
-            </div>
-            <div className="receipt-title-badge">
-              <span>OFFICIAL RECEIPT</span>
-              <strong className="receipt-code">{booking.booking_code}</strong>
-            </div>
+        {/* Info Grid */}
+        <div style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', background: '#1e293b', padding: '1rem', borderRadius: '8px' }}>
+             <div>
+                <p style={{ margin: '0 0 0.25rem 0', color: '#94a3b8', fontSize: '0.85rem' }}>Guest Name</p>
+                <strong style={{ color: '#f8fafc' }}>{booking.guest_name}</strong>
+             </div>
+             <div>
+                <p style={{ margin: '0 0 0.25rem 0', color: '#94a3b8', fontSize: '0.85rem' }}>Total Amount</p>
+                <strong style={{ color: '#a3e635' }}>₱{Number(booking.total_price).toLocaleString()}</strong>
+             </div>
+             <div>
+                <p style={{ margin: '0 0 0.25rem 0', color: '#94a3b8', fontSize: '0.85rem' }}>Ref. No. (Last 4 Digits)</p>
+                <strong style={{ color: '#f8fafc', letterSpacing: '0.1rem', fontSize: '1.1rem' }}>{booking.payment_reference_last4 || 'N/A'}</strong>
+             </div>
+             <div>
+                <p style={{ margin: '0 0 0.25rem 0', color: '#94a3b8', fontSize: '0.85rem' }}>Booking Code</p>
+                <strong style={{ color: '#38bdf8' }}>{booking.booking_code}</strong>
+             </div>
           </div>
 
-          <hr className="receipt-divider" />
-
-          {/* Status Alert Banner */}
-          <div className="receipt-status-banner">
-            <CheckCircle2 size={20} />
-            <div>
-              <strong>Payment Status: CONFIRMED</strong>
-              <span>Reservation logged and verified in facility booking system.</span>
-            </div>
-          </div>
-
-          {/* Customer & Reservation Details Grid */}
-          <div className="receipt-grid">
-            <div className="receipt-info-block">
-              <div className="info-label"><User size={14} /> Guest Information</div>
-              <div className="info-value-main">{booking.guest_name}</div>
-              <div className="info-value-sub">{booking.guest_email}</div>
-              <div className="info-value-sub">{booking.guest_phone}</div>
-            </div>
-
-            <div className="receipt-info-block">
-              <div className="info-label"><Calendar size={14} /> Reserved Schedule</div>
-              <div className="info-value-main">{booking.court_name || booking.court_id}</div>
-              <div className="info-value-sub">{formatDateDisplay(booking.booking_date)}</div>
-              <div className="info-value-sub">
-                <Clock size={12} className="inline mr-1" />
-                {formatHourLabel(booking.start_hour)} - {formatHourLabel(booking.end_hour)} ({booking.duration_hours} {booking.duration_hours === 1 ? 'Hour' : 'Hours'})
-              </div>
-            </div>
-          </div>
-
-          <hr className="receipt-divider" />
-
-          {/* Financial Breakdown Table */}
-          <table className="receipt-table">
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th>Hours</th>
-                <th style={{ textAlign: 'right' }}>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <strong>Pickleball Court Reservation</strong>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{booking.court_name || booking.court_id} &bull; {booking.booking_date}</div>
-                </td>
-                <td>{booking.duration_hours}h</td>
-                <td style={{ textAlign: 'right', fontWeight: 600 }}>₱{Number(booking.total_price).toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Totals Summary */}
-          <div className="receipt-totals">
-            <div className="receipt-total-row">
-              <span>Subtotal:</span>
-              <span>₱{Number(booking.total_price).toFixed(2)}</span>
-            </div>
-            <div className="receipt-total-row">
-              <span>Tax / Fees:</span>
-              <span>₱0.00</span>
-            </div>
-            <div className="receipt-total-row grand-total">
-              <span>Total Paid:</span>
-              <span>₱{Number(booking.total_price).toFixed(2)}</span>
-            </div>
-          </div>
-
-          {/* Payment Method & Guarantee */}
-          <div className="receipt-footer-meta">
-            <div>
-              <span className="meta-label">Payment Method:</span>
-              <strong className="meta-val"><DollarSign size={14} className="inline" /> {paymentMethod}</strong>
-            </div>
-            {paymentRecord?.payment_intent_id && (
-              <div>
-                <span className="meta-label">Transaction Ref:</span>
-                <span className="meta-val">{paymentRecord.payment_intent_id}</span>
+          {/* Image Viewer */}
+          <div style={{ border: '1px solid #334155', borderRadius: '8px', overflow: 'hidden', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            {booking.receipt_url ? (
+              <img 
+                src={booking.receipt_url} 
+                alt="Payment Receipt" 
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '500px', 
+                  height: 'auto',
+                  objectFit: 'contain', 
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
+            ) : (
+              <div style={{ textAlign: 'center', color: '#64748b', padding: '3rem 0' }}>
+                <ImageIcon size={48} style={{ margin: '0 auto 0.5rem auto', opacity: 0.5 }} />
+                <p style={{ margin: 0 }}>No Receipt Uploaded</p>
               </div>
             )}
           </div>
-
-          <div className="receipt-security-note">
-            <ShieldCheck size={16} />
-            <span>Thank you for playing at DinkResponsibly! Please present this receipt code (<strong>{booking.booking_code}</strong>) upon arrival at the facility.</span>
-          </div>
         </div>
+
       </div>
     </div>
   );
