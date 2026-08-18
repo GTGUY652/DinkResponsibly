@@ -8,7 +8,7 @@ Presentation layer components powering the DinkResponsibly Admin Dashboard. Prov
 
 | File | Owns |
 |---|---|
-| `CheckInTable.tsx` | Paid court reservation table with search, reference code filter, and PayMongo receipt links |
+| `CheckInTable.tsx` | Paid court reservation table with search, reference code filter, and receipt screenshot lightbox links |
 | `RateController.tsx` | Owner-exclusive court hourly rate controller and active court toggle state |
 | `TicketPortal.tsx` | Customer support ticket browser and direct email response modal using Resend edge function |
 | `StaffManager.tsx` | Owner-exclusive staff account creation and deactivation interface |
@@ -24,6 +24,4 @@ Presentation layer components powering the DinkResponsibly Admin Dashboard. Prov
 ## Gotchas
 
 - Staff accounts cannot execute rate modifications; UI elements must be hidden or disabled for `STAFF` role.
-- PayMongo receipt links should open in a new browser tab (`target="_blank" rel="noopener noreferrer"`).
-
-_Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
+- Receipt screenshot images are stored in the Supabase `payment-receipts` bucket and should open in a lightbox or new tab securely.

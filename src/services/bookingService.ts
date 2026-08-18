@@ -78,14 +78,13 @@ export const fetchBookedSlots = async (
   courtId: string,
   bookingDate: string
 ): Promise<{ start_hour: number; end_hour: number }[]> => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('start_hour, end_hour, court_id')
-    .eq('booking_date', bookingDate)
-    .neq('status', 'cancelled');
+
+  const { data, error } = await supabase.rpc('get_booked_slots', {
+    query_date: bookingDate,
+  });
 
   if (error) {
-    console.error('Error fetching booked slots:', error.message);
+    console.error('Error fetching booked slots via RPC:', error.message);
     return [];
   }
 
@@ -99,28 +98,7 @@ export const fetchBookedSlots = async (
 export const createBooking = async (
   booking: Omit<BookingRecord, 'id' | 'created_at'>
 ): Promise<BookingRecord> => {
-  // 1. Strict Overlap Check (Concurrency & Double Booking Safeguard)
-  const { data: existing, error: checkError } = await supabase
-    .from('bookings')
-    .select('start_hour, end_hour, court_id')
-    .eq('booking_date', booking.booking_date)
-    .neq('status', 'cancelled');
 
-  if (checkError) {
-    console.error('Error checking existing reservations:', checkError.message);
-  } else if (existing && existing.length > 0) {
-    const hasOverlap = existing.some((item) => {
-      if (!isCourtMatch(item.court_id, booking.court_id)) return false;
-      // Overlap formula: (new_start < existing_end) AND (new_end > existing_start)
-      return booking.start_hour < item.end_hour && booking.end_hour > item.start_hour;
-    });
-
-    if (hasOverlap) {
-      throw new Error(`Double Booking Rejection: This court slot has already been reserved by another player.`);
-    }
-  }
-
-  // 2. Insert booking
   const { data, error } = await supabase
     .from('bookings')
     .insert([booking])
@@ -128,6 +106,11 @@ export const createBooking = async (
     .single();
 
   if (error) {
+
+    if (error.code === '23P04' || error.message.includes('overlap') || error.message.includes('exclude')) {
+      throw new Error('This court slot has already been reserved by another player.');
+    }
+
     throw new Error(error.message);
   }
 
