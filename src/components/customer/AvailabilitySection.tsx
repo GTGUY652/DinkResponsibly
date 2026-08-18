@@ -40,7 +40,7 @@ export const AvailabilitySection: React.FC = () => {
     if (data && data.length > 0) {
       setCourtsList(data);
     }
-  }, []);
+  }, [setCourtsList]);
 
   useEffect(() => {
     void loadCourts();
@@ -128,7 +128,7 @@ export const AvailabilitySection: React.FC = () => {
 
   // Dynamically compute rate per hour marker using active court's configuration
   const baseTimePoints = rawHourList.map((item) => {
-    let rate = 400;
+    let rate: number;
     if (activeCourtRecord) {
       if (isWeekend) {
         rate = activeCourtRecord.weekend_rate ?? 500;
@@ -280,8 +280,9 @@ export const AvailabilitySection: React.FC = () => {
       setStartHour(null);
       setEndHour(null);
       await loadAvailability();
-    } catch (err: any) {
-      setErrorMessage(err.message);
+    } catch (err: unknown) {
+      const error = err as Error;
+      setErrorMessage(error.message);
       setIsModalOpen(false);
       setStartHour(null);
       setEndHour(null);

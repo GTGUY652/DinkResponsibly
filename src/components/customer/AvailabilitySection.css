@@ -1,19 +1,19 @@
 .section-container {
-  padding: 5rem 0 3rem 0;
+  padding: 3rem 0 2rem 0;
 }
 
 .section-header {
   text-align: center;
   max-width: 680px;
-  margin: 0 auto 3.5rem auto;
+  margin: 0 auto 2rem auto;
 }
 
 .section-title {
   font-family: var(--font-display);
-  font-size: 2.75rem;
+  font-size: 2.25rem;
   font-weight: 900;
   letter-spacing: -0.03em;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.5rem 0;
   color: #ffffff;
 }
 
@@ -39,8 +39,8 @@
 .card-box {
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
-  border-radius: 1.25rem;
-  padding: 1.75rem;
+  border-radius: 1rem;
+  padding: 1.25rem;
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }
@@ -49,7 +49,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .card-title-bar h3 {
@@ -133,7 +133,7 @@
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .court-tab-btn {
@@ -195,10 +195,10 @@
 
 .session-filter-container {
   background: rgba(7, 11, 20, 0.6);
-  padding: 1.1rem;
+  padding: 0.85rem 1.1rem;
   border-radius: 0.85rem;
   border: 1px solid var(--border-subtle);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .session-label {
@@ -249,21 +249,21 @@
 .timeline-instruction {
   font-size: 0.875rem;
   color: var(--text-secondary);
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.85rem;
 }
 
 .spacious-slots-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-  gap: 0.85rem;
-  margin-bottom: 1.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
 }
 
 .slot-card-item {
   background: rgba(7, 11, 20, 0.7);
   border: 1px solid var(--glass-border);
-  border-radius: 0.75rem;
-  padding: 1rem;
+  border-radius: 0.6rem;
+  padding: 0.75rem 0.5rem;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -339,11 +339,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(7, 11, 20, 0.85);
-  padding: 1.25rem 1.5rem;
+  background: rgba(7, 11, 20, 0.95);
+  backdrop-filter: blur(12px);
+  padding: 1rem 1.25rem;
   border-radius: 0.85rem;
   border: 1px solid var(--accent-lime);
   box-shadow: 0 0 20px var(--accent-lime-glow);
+  position: sticky;
+  bottom: 1rem;
+  z-index: 10;
 }
 
 .booking-summary-bar.prompt {
