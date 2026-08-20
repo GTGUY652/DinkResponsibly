@@ -12,11 +12,6 @@ export const HeroSection: React.FC = () => {
       <div className="hero-grid">
         {/* Left Side: Headline & Copy */}
         <div className="hero-content">
-          <div className="hero-badge">
-            <span className="pulse-dot"></span>
-            COURTS OPEN & AVAILABLE NOW
-          </div>
-
           <h1 className="hero-title">
             Reserve Your Court at <br />
             <span className="brand-accent">DinkResponsibly</span>
@@ -49,13 +44,6 @@ export const HeroSection: React.FC = () => {
 
         {/* Right Side: Visual Card Layout with Generated Court Media */}
         <div className="hero-visual-card">
-          <div className="rate-floating-badge">
-            <Sparkles size={16} className="badge-icon" />
-            <div>
-              <span className="badge-sub">Rates starting at</span>
-              <div className="badge-price">₱400<span className="unit">/hr</span></div>
-            </div>
-          </div>
 
           <div className="card-image-container">
             <img 

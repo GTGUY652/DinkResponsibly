@@ -366,7 +366,7 @@
 
 .floating-reset-corner-btn {
   position: fixed;
-  top: 5.5rem;
+  bottom: 2rem;
   right: 2rem;
   z-index: 999;
   display: flex;
