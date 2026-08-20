@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ShieldAlert, User, Mail, Phone, CheckCircle, Loader2, ArrowRight, QrCode, Upload, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { X, ShieldAlert, User, Mail, Phone, CheckCircle, Loader2, ArrowRight, QrCode, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import { compressImage } from '../../utils/imageCompression';
 import { uploadPaymentReceipt } from '../../services/bookingService';
 import './TermsModal.css';
@@ -7,10 +7,10 @@ import './TermsModal.css';
 interface TermsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  courtId: string;
-  bookingDate: string;
-  timeRangeText: string;
-  durationHours: number;
+  courtId?: string;
+  bookingDate?: string;
+  timeRangeText?: string;
+  durationHours?: number;
   totalPrice: number;
   onConfirmBooking: (data: { name: string; email: string; phone: string; referenceLast4: string; receiptUrl: string }) => Promise<void>;
 }
@@ -18,10 +18,10 @@ interface TermsModalProps {
 export const TermsModal: React.FC<TermsModalProps> = ({
   isOpen,
   onClose,
-  courtId,
-  bookingDate,
-  timeRangeText,
-  durationHours,
+  courtId: _courtId,
+  bookingDate: _bookingDate,
+  timeRangeText: _timeRangeText,
+  durationHours: _durationHours,
   totalPrice,
   onConfirmBooking,
 }) => {

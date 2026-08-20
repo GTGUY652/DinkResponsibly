@@ -1,0 +1,184 @@
+.step-guest-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.guest-step-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.guest-form-card,
+.reservation-recap-box,
+.venue-policy-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.85rem;
+  padding: 1.15rem;
+}
+
+.card-subheading {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-input-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.form-input-group .req {
+  color: #ef4444;
+}
+
+.guest-text-input {
+  background: #0b1120;
+  border: 1px solid #1e293b;
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.guest-text-input:focus {
+  border-color: var(--accent-lime);
+  box-shadow: 0 0 0 2px var(--accent-lime-glow);
+}
+
+.terms-checkbox-box {
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  background: rgba(163, 230, 53, 0.05);
+  border: 1px solid rgba(163, 230, 53, 0.2);
+  border-radius: 0.65rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+.terms-checkbox {
+  margin-top: 0.15rem;
+  accent-color: var(--accent-lime);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.policy-summary-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.recap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.recap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+}
+
+.recap-label {
+  color: var(--text-muted);
+}
+
+.recap-val {
+  color: var(--text-primary);
+}
+
+.recap-row.total {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.recap-total {
+  font-size: 1.3rem;
+  color: var(--accent-lime);
+  font-family: var(--font-mono);
+  font-weight: 800;
+}
+
+.policy-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.policy-header h4 {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.policy-header .text-amber {
+  color: #fbbf24;
+}
+
+.rules-bullet-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.rules-bullet-list li {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.rules-bullet-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--accent-lime);
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .guest-step-grid {
+    grid-template-columns: 1fr;
+  }
+}

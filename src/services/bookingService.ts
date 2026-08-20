@@ -114,7 +114,7 @@ export const fetchBookedSlots = async (
 
   if (!data) return [];
 
-  return data
+  return (data as Array<{ court_id: string; start_hour: number; end_hour: number }>)
     .filter((b) => isCourtMatch(b.court_id, courtId))
     .map(({ start_hour, end_hour }) => ({ start_hour, end_hour }));
 };

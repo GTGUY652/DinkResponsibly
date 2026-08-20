@@ -1,0 +1,142 @@
+.booking-wizard-wrapper {
+  max-width: 980px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.wizard-card-body {
+  padding: 1.25rem 1.75rem;
+  min-height: auto;
+}
+
+.wizard-global-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  padding: 0.75rem 1rem;
+  border-radius: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.wizard-bottom-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.75rem;
+  background: rgba(11, 17, 32, 0.85);
+  border-top: 1px solid var(--glass-border);
+  gap: 1rem;
+}
+
+.nav-btn-back {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 0.55rem 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-btn-back:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.step-count-indicator {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-center-recap {
+  display: flex;
+  align-items: center;
+}
+
+.recap-pill {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.nav-btn-next {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-emerald) 100%);
+  color: #040c1a;
+  border: none;
+  padding: 0.6rem 1.3rem;
+  border-radius: 0.6rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 15px var(--accent-lime-glow);
+  transition: all 0.2s ease;
+}
+
+.nav-btn-next:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(163, 230, 53, 0.4);
+}
+
+.nav-btn-next:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: #334155;
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .wizard-card-body {
+    padding: 1.25rem;
+  }
+  .wizard-bottom-nav {
+    padding: 1rem 1.25rem;
+    flex-wrap: wrap;
+  }
+  .nav-center-recap {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+  .recap-pill {
+    font-size: 0.75rem;
+  }
+  .nav-left, .nav-right {
+    flex: 1;
+  }
+  .nav-right {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
