@@ -157,15 +157,36 @@
   color: var(--text-secondary);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .calendar-card-wrapper {
-    padding: 1rem;
+    padding: 0.85rem 0.6rem;
   }
   .calendar-days-matrix {
-    gap: 0.25rem;
+    gap: 0.2rem;
   }
   .cal-day-cell {
     font-size: 0.85rem;
     border-radius: 0.4rem;
+    min-height: 38px;
+  }
+  .selected-date-banner {
+    padding: 0.65rem 0.75rem;
+    margin-top: 0.85rem;
+  }
+  .date-badge-left {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .calendar-card-wrapper {
+    padding: 0.65rem 0.4rem;
+  }
+  .cal-day-cell {
+    font-size: 0.78rem;
+    min-height: 34px;
+  }
+  .calendar-weekdays-row {
+    font-size: 0.68rem;
   }
 }

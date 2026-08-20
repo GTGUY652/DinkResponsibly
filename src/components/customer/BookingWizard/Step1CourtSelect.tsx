@@ -30,6 +30,10 @@ export const Step1CourtSelect: React.FC<Step1CourtSelectProps> = ({
         </p>
       </div>
 
+      <div className="mobile-swipe-hint">
+        <span>Swipe courts →</span>
+      </div>
+
       <div className="court-cards-grid">
         {courts.map((court) => {
           const isSelected = selectedCourt === court.id || selectedCourt === court.name;

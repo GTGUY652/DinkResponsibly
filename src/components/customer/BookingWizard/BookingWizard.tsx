@@ -418,7 +418,7 @@ export const BookingWizard: React.FC = () => {
 
       {/* Sticky Bottom Navigation Bar for Steps 1 through 4 */}
       {!isSuccess && currentStep < 5 && (
-        <div className="wizard-bottom-nav">
+        <div className={`wizard-bottom-nav ${currentStep === 1 ? 'is-first-step' : ''}`}>
           <div className="nav-left">
             {currentStep > 1 ? (
               <button

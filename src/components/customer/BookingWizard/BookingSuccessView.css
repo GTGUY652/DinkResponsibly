@@ -186,8 +186,28 @@
   transform: translateY(-2px);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+  .booking-success-container {
+    padding: 1rem 0;
+  }
+  .success-headline {
+    font-size: 1.35rem;
+  }
+  .success-subtext {
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+  .booking-code-card {
+    padding: 1rem;
+  }
+  .booking-code-text {
+    font-size: 1.35rem;
+  }
   .success-summary-grid {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .summary-item {
+    padding: 0.65rem 0.85rem;
   }
 }

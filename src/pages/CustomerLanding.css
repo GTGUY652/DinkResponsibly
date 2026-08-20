@@ -42,6 +42,12 @@
   z-index: 1;
 }
 
+@media (max-width: 640px) {
+  .customer-main-content {
+    padding: 1rem 0.75rem 5rem 0.75rem;
+  }
+}
+
 .text-accent {
   color: var(--accent-lime);
 }

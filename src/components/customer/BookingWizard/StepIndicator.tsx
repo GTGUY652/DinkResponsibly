@@ -47,6 +47,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
                 onClick={() => isClickable && onStepClick(step.number)}
                 disabled={!isClickable}
                 aria-current={isCurrent ? 'step' : undefined}
+                aria-label={`Step ${step.number}: ${step.label}`}
               >
                 <span className="step-badge">
                   {isCompleted ? <Check size={14} className="check-icon" /> : step.icon}
@@ -62,6 +63,10 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
           );
         })}
       </ol>
+      <div className="mobile-current-step-banner">
+        <span className="mobile-step-pill">Step {currentStep} of {steps.length}</span>
+        <span className="mobile-step-title">{steps[currentStep - 1]?.label}</span>
+      </div>
     </nav>
   );
 };

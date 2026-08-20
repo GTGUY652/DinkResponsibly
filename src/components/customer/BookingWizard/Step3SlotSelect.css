@@ -239,6 +239,7 @@
   .slot-filter-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.5rem;
   }
   .session-filter-buttons {
     width: 100%;
@@ -247,15 +248,34 @@
   .filter-tab-btn {
     flex: 1;
     justify-content: center;
-    padding: 0.4rem 0.5rem;
-    font-size: 0.76rem;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.74rem;
+  }
+  .reset-slots-btn {
+    align-self: flex-end;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.74rem;
+  }
+  .discrete-slots-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.45rem;
+  }
+  .discrete-slot-card {
+    padding: 0.55rem 0.35rem;
+    min-height: 52px;
   }
   .slot-selection-summary-bar {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding: 0.75rem 0.85rem;
   }
   .summary-total-price {
-    text-align: left;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.4rem;
   }
 }

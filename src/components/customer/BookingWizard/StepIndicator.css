@@ -128,21 +128,66 @@
   transition: background 0.3s ease;
 }
 
-.step-indicator-item.completed .step-connector-line {
-  background: var(--accent-emerald);
+.mobile-current-step-banner {
+  display: none;
 }
 
-@media (max-width: 768px) {
-  .step-full-label {
+@media (max-width: 640px) {
+  .wizard-step-indicator {
+    padding: 0.6rem 0.85rem;
+    overflow-x: visible;
+  }
+
+  .step-indicator-list {
+    min-width: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .step-info {
     display: none;
   }
-  .step-mobile-label {
-    display: inline-block;
+
+  .step-badge {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
   }
-  .step-indicator-list {
-    min-width: 480px;
+
+  .step-node-btn {
+    padding: 0;
+    gap: 0;
   }
+
   .step-connector-line {
-    margin: 0 0.4rem;
+    margin: 0 0.25rem;
+    height: 2px;
+  }
+
+  .mobile-current-step-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-step-pill {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 800;
+    color: var(--accent-lime);
+    background: rgba(163, 230, 53, 0.12);
+    padding: 0.15rem 0.55rem;
+    border-radius: 9999px;
+  }
+
+  .mobile-step-title {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #ffffff;
   }
 }

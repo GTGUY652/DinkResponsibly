@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sun, Moon, Sparkles, AlertCircle, RefreshCw, CheckCircle2, Clock } from 'lucide-react';
+import { Sun, Moon, AlertCircle, RefreshCw, CheckCircle2, Clock } from 'lucide-react';
 import './Step3SlotSelect.css';
 
 export interface DiscreteSlotItem {
@@ -26,13 +26,10 @@ export const Step3SlotSelect: React.FC<Step3SlotSelectProps> = ({
   onResetSelection,
   loading,
 }) => {
-  const [sessionFilter, setSessionFilter] = useState<'ALL' | 'AM' | 'PM'>('ALL');
+  const [sessionFilter, setSessionFilter] = useState<'AM' | 'PM'>('AM');
   const [contiguousNotice, setContiguousNotice] = useState<string | null>(null);
 
-  const filteredSlots = slots.filter((slot) => {
-    if (sessionFilter === 'ALL') return true;
-    return slot.session === sessionFilter;
-  });
+  const filteredSlots = slots.filter((slot) => slot.session === sessionFilter);
 
   const sortedSelected = [...selectedHours].sort((a, b) => a - b);
   const minHour = sortedSelected.length > 0 ? sortedSelected[0] : null;
@@ -94,13 +91,6 @@ export const Step3SlotSelect: React.FC<Step3SlotSelectProps> = ({
         <div className="session-filter-buttons">
           <button
             type="button"
-            onClick={() => setSessionFilter('ALL')}
-            className={`filter-tab-btn ${sessionFilter === 'ALL' ? 'active' : ''}`}
-          >
-            <Sparkles size={14} /> Full Day (All)
-          </button>
-          <button
-            type="button"
             onClick={() => setSessionFilter('AM')}
             className={`filter-tab-btn ${sessionFilter === 'AM' ? 'active' : ''}`}
           >
@@ -111,7 +101,7 @@ export const Step3SlotSelect: React.FC<Step3SlotSelectProps> = ({
             onClick={() => setSessionFilter('PM')}
             className={`filter-tab-btn ${sessionFilter === 'PM' ? 'active' : ''}`}
           >
-            <Moon size={14} /> Afternoon/Evening (PM)
+            <Moon size={14} /> Afternoon / Evening (PM)
           </button>
         </div>
 

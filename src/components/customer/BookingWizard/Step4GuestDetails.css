@@ -180,5 +180,14 @@
 @media (max-width: 768px) {
   .guest-step-grid {
     grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+  .guest-form-card,
+  .reservation-recap-box,
+  .venue-policy-card {
+    padding: 0.95rem;
+  }
+  .guest-text-input {
+    font-size: 16px;
   }
 }
