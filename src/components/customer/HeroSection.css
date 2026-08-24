@@ -254,3 +254,74 @@
   margin: 0;
   font-size: 0.875rem;
 }
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 2rem 0 1.75rem 0;
+  }
+  
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .hero-title {
+    font-size: 2.25rem;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+
+  .hero-description {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-cta-group {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .hero-trust-bar {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .trust-item {
+    font-size: 0.8rem;
+  }
+
+  .card-image-container {
+    min-height: 220px;
+    max-height: 280px;
+  }
+
+  .card-caption {
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+  }
+
+  .card-caption h3 {
+    font-size: 1.15rem;
+  }
+
+  .card-caption p {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 1.95rem;
+  }
+}

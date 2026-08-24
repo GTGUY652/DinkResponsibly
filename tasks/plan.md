@@ -1,41 +1,27 @@
-# Implementation Plan: Backend Security Fixes
+# 0007 Implementation Plan: Manual QR Payment & Receipt Approval
 
-## Overview
-This plan outlines the sequential tasks to lock down the Supabase database (RLS + RPC), enforce atomic double-booking prevention, update frontend service methods, and patch dependencies.
+## Phases
 
-## Architecture Decisions
-- **`EXCLUDE` constraint for overlaps**: We will enable the `btree_gist` extension in a new Supabase migration and apply an exclusion constraint on `court_id`, `booking_date`, and `int4range(start_hour, end_hour)`. This is the most bulletproof way to prevent calendar overlaps in Postgres.
-- **RPC for Calendar Availability**: We will create a `get_booked_slots(query_date)` PostgreSQL function that bypasses RLS using `SECURITY DEFINER`. This allows the calendar to read anonymous slot times while the underlying `bookings` table `SELECT` policy is completely shut off from the public.
+### Phase 1: Storage and Schema Security
+1. Create new migration for `bookings` schema expansion (`receipt_url`, `payment_reference_last4`).
+2. Update the `status` CHECK constraint on the `bookings` table to handle `PENDING_VERIFICATION` and `REJECTED`.
+3. Create the `payment-receipts` Supabase Storage bucket.
+4. Apply Row Level Security (RLS) to the bucket: 
+   - 5MB limit.
+   - `image/png`, `image/jpeg`, `image/webp` restriction.
+   - Public INSERT, Authenticated Admin READ.
 
-## Task List
+### Phase 2: Client-Side Services
+1. Create `src/utils/imageCompression.ts` (Native HTML5 Canvas compressor).
+2. Update `src/services/bookingService.ts` to include `uploadPaymentReceipt`.
+3. Update `createBooking` payload signature to accept new fields and default to `PENDING_VERIFICATION`.
 
-### Phase 1: Database Foundation (Migrations)
-- [ ] Task 1: Create migration for `btree_gist` extension and `EXCLUDE` constraint on bookings.
-- [ ] Task 2: Create migration for `get_booked_slots` RPC function and fix `bookings` RLS policies (revoke public SELECT/UPDATE/DELETE, keep public INSERT).
+### Phase 3: Frontend Multi-Step Wizard
+1. Refactor `TermsModal.tsx` into a multi-step modal (`step = 1 | 2`).
+2. Step 1: Terms & Conditions.
+3. Step 2: Payment (QR Code display, Last 4 digits input, File uploader calling `imageCompression.ts`).
 
-### Checkpoint: Foundation
-- [ ] Migrations applied successfully to local/remote database.
-- [ ] Direct SQL queries confirm overlapping inserts fail.
-- [ ] Anonymous Supabase API queries confirm `SELECT` on `bookings` is blocked.
-
-### Phase 2: Frontend Integration
-- [ ] Task 3: Update `fetchBookedSlots` in `bookingService.ts` to use `supabase.rpc('get_booked_slots')`.
-- [ ] Task 4: Remove client-side overlap check in `createBooking` and implement error handling to catch the Postgres exclusion violation (`23P04`), returning a specific error message.
-- [ ] Task 5: Update the checkout UI (`AvailabilitySection.tsx`) to display the specific toast error message and trigger a calendar refresh when the double booking error is caught.
-
-### Checkpoint: Core Features
-- [ ] Calendar loads correctly without exposing PII.
-- [ ] Simultaneous booking attempts result in a graceful UI rejection for the slower user.
-
-### Phase 3: Dependencies
-- [ ] Task 6: Run `npm audit fix` to resolve `nanoid` vulnerability.
-
-### Checkpoint: Complete
-- [ ] All acceptance criteria met.
-- [ ] Ready for review.
-
-## Risks and Mitigations
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| `btree_gist` extension not supported | High | Supabase supports it natively. We will verify during the local migration test. |
-| Admin dashboard breaks due to RLS | Med | We will ensure the `role IN ('OWNER', 'STAFF')` policy covers all admin queries in `bookingService.ts`. |
+### Phase 4: Admin Approval Tools
+1. Update `Admin Dashboard` to query new fields.
+2. Build `ReceiptModal.tsx` to display the receipt and the reference digits.
+3. Update `CheckInTable.tsx` to handle the `APPROVED` lock state and `REJECTED` state.

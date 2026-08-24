@@ -1,7 +1,7 @@
 .floating-ticket-btn {
   position: fixed;
   bottom: 2rem;
-  right: 2rem;
+  left: 2rem;
   z-index: 999;
   width: 60px;
   height: 60px;
@@ -99,4 +99,20 @@
 .success-view {
   text-align: center;
   padding: 2rem 1rem;
+}
+
+@media (max-width: 640px) {
+  .floating-ticket-btn {
+    bottom: 1rem;
+    left: 1rem;
+    width: 48px;
+    height: 48px;
+  }
+  .modal-content {
+    margin: 1rem;
+    border-radius: 1rem;
+  }
+  .modal-body {
+    padding: 1.25rem;
+  }
 }
