@@ -100,3 +100,19 @@
   text-align: center;
   padding: 2rem 1rem;
 }
+
+@media (max-width: 640px) {
+  .floating-ticket-btn {
+    bottom: 1rem;
+    left: 1rem;
+    width: 48px;
+    height: 48px;
+  }
+  .modal-content {
+    margin: 1rem;
+    border-radius: 1rem;
+  }
+  .modal-body {
+    padding: 1.25rem;
+  }
+}

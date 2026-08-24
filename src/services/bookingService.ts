@@ -1,14 +1,5 @@
 import { supabase } from './supabase';
 
-export interface PaymentRecord {
-  id?: string;
-  booking_id: string;
-  payment_provider: string;
-  payment_intent_id?: string;
-  receipt_url?: string;
-  amount: number;
-  status: string;
-}
 
 export interface BookingRecord {
   id?: string;
@@ -27,7 +18,6 @@ export interface BookingRecord {
   payment_reference_last4?: string;
   receipt_url?: string;
   created_at?: string;
-  payments?: PaymentRecord[];
 }
 
 export interface CourtRecord {
@@ -114,7 +104,7 @@ export const fetchBookedSlots = async (
 
   if (!data) return [];
 
-  return data
+  return (data as Array<{ court_id: string; start_hour: number; end_hour: number }>)
     .filter((b) => isCourtMatch(b.court_id, courtId))
     .map(({ start_hour, end_hour }) => ({ start_hour, end_hour }));
 };
@@ -205,7 +195,7 @@ export const calculateRevenueOverviewMetrics = (
   bookings: BookingRecord[],
   dateRangeFilter: string = 'this_month',
   courtFilter: string = 'all',
-  granularity: 'day' | 'week' | 'month' | 'year' = 'month',
+  granularity: 'hour' | 'day' | 'week' | 'month' | 'year' = 'month',
   refDate: Date = new Date()
 ): RevenueOverviewData => {
   const pad = (n: number) => n.toString().padStart(2, '0');
@@ -313,32 +303,76 @@ export const calculateRevenueOverviewMetrics = (
 
   const trendMap: { [label: string]: { revenue: number; count: number } } = {};
 
+  // Pre-fill trendMap to ensure continuous time axis
+  if (granularity === 'hour') {
+    // Operating hours: 6 AM to 2 AM next day
+    const hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2];
+    hours.forEach(hr => {
+      const ampm = hr >= 12 ? 'PM' : 'AM';
+      const hr12 = hr % 12 || 12;
+      trendMap[`${hr12} ${ampm}`] = { revenue: 0, count: 0 };
+    });
+  } else if (granularity === 'day') {
+    if (dateRangeFilter === 'last_7_days') {
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(refDate);
+        d.setDate(refDate.getDate() - i);
+        const dayStr = formatDateStr(d);
+        const parts = dayStr.split('-');
+        trendMap[`${parts[1]}/${parts[2]}`] = { revenue: 0, count: 0 };
+      }
+    } else if (dateRangeFilter === 'this_month') {
+      const daysInMonth = new Date(curYear, curMonth, 0).getDate();
+      for (let i = 1; i <= daysInMonth; i++) {
+        trendMap[`${pad(curMonth)}/${pad(i)}`] = { revenue: 0, count: 0 };
+      }
+    }
+  }
+
   chartBookings.forEach((b) => {
     let key = b.booking_date;
-    if (granularity === 'day') {
-      const parts = b.booking_date.split('-');
-      key = parts.length === 3 ? `${parts[1]}/${parts[2]}` : b.booking_date;
-    } else if (granularity === 'week') {
-      const d = new Date(b.booking_date);
-      const dayNum = d.getDate();
-      const weekNum = Math.ceil(dayNum / 7);
-      key = `Wk ${weekNum}`;
-    } else if (granularity === 'month') {
-      const parts = b.booking_date.split('-');
-      if (parts.length >= 2) {
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const mIdx = parseInt(parts[1], 10) - 1;
-        key = monthNames[mIdx] || parts[1];
+    if (granularity === 'hour') {
+      const duration = b.duration_hours && b.duration_hours > 0 ? b.duration_hours : 1;
+      const hourlyRevenue = (b.total_price || 0) / duration;
+      
+      for (let i = 0; i < duration; i++) {
+        const hr = (b.start_hour + i) % 24;
+        const ampm = hr >= 12 ? 'PM' : 'AM';
+        const hr12 = hr % 12 || 12;
+        const hKey = `${hr12} ${ampm}`;
+        
+        if (!trendMap[hKey]) {
+          trendMap[hKey] = { revenue: 0, count: 0 };
+        }
+        trendMap[hKey].revenue += hourlyRevenue;
+        trendMap[hKey].count += 1; // Count as an active booking for this hour
       }
-    } else if (granularity === 'year') {
-      key = b.booking_date.substring(0, 4);
-    }
+    } else {
+      if (granularity === 'day') {
+        const parts = b.booking_date.split('-');
+        key = parts.length === 3 ? `${parts[1]}/${parts[2]}` : b.booking_date;
+      } else if (granularity === 'week') {
+        const d = new Date(b.booking_date);
+        const dayNum = d.getDate();
+        const weekNum = Math.ceil(dayNum / 7);
+        key = `Wk ${weekNum}`;
+      } else if (granularity === 'month') {
+        const parts = b.booking_date.split('-');
+        if (parts.length >= 2) {
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const mIdx = parseInt(parts[1], 10) - 1;
+          key = monthNames[mIdx] || parts[1];
+        }
+      } else if (granularity === 'year') {
+        key = b.booking_date.substring(0, 4);
+      }
 
-    if (!trendMap[key]) {
-      trendMap[key] = { revenue: 0, count: 0 };
+      if (!trendMap[key]) {
+        trendMap[key] = { revenue: 0, count: 0 };
+      }
+      trendMap[key].revenue += b.total_price || 0;
+      trendMap[key].count += 1;
     }
-    trendMap[key].revenue += b.total_price || 0;
-    trendMap[key].count += 1;
   });
 
   const trendChartData: TrendPoint[] = Object.keys(trendMap).map((label) => ({
@@ -366,7 +400,7 @@ export const calculateRevenueOverviewMetrics = (
 export const fetchRevenueOverviewData = async (
   dateRange: string = 'this_month',
   courtFilter: string = 'all',
-  granularity: 'day' | 'week' | 'month' | 'year' = 'month'
+  granularity: 'hour' | 'day' | 'week' | 'month' | 'year' = 'month'
 ): Promise<RevenueOverviewData> => {
   const bookings = await fetchAdminBookings();
   return calculateRevenueOverviewMetrics(bookings, dateRange, courtFilter, granularity);
