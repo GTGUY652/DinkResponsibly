@@ -29,16 +29,17 @@ import './RevenueOverview.css';
 export const RevenueOverview: React.FC = () => {
   const [dateRange, setDateRange] = useState<string>('this_month');
   const [courtFilter, setCourtFilter] = useState<string>('all');
-  const [granularity, setGranularity] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [courts, setCourts] = useState<CourtRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<RevenueOverviewData | null>(null);
+
+  const derivedGranularity = dateRange === 'today' ? 'hour' : 'day';
 
   const loadData = async () => {
     setLoading(true);
     try {
       const [resData, courtList] = await Promise.all([
-        fetchRevenueOverviewData(dateRange, courtFilter, granularity),
+        fetchRevenueOverviewData(dateRange, courtFilter, derivedGranularity),
         fetchCourts(),
       ]);
       setData(resData);
@@ -52,7 +53,7 @@ export const RevenueOverview: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [dateRange, courtFilter, granularity]);
+  }, [dateRange, courtFilter, derivedGranularity]);
 
   const handleExportCSV = () => {
     if (!data) return;
@@ -241,34 +242,7 @@ export const RevenueOverview: React.FC = () => {
         <div className="chart-header">
           <div className="chart-title-group">
             <h3>Revenue Trend Analytics</h3>
-            <p>Visualizing total income generated over selected granularity</p>
-          </div>
-
-          <div className="granularity-toggles">
-            <button
-              className={`granularity-btn ${granularity === 'day' ? 'active' : ''}`}
-              onClick={() => setGranularity('day')}
-            >
-              Day
-            </button>
-            <button
-              className={`granularity-btn ${granularity === 'week' ? 'active' : ''}`}
-              onClick={() => setGranularity('week')}
-            >
-              Week
-            </button>
-            <button
-              className={`granularity-btn ${granularity === 'month' ? 'active' : ''}`}
-              onClick={() => setGranularity('month')}
-            >
-              Month
-            </button>
-            <button
-              className={`granularity-btn ${granularity === 'year' ? 'active' : ''}`}
-              onClick={() => setGranularity('year')}
-            >
-              Year
-            </button>
+            <p>Visualizing total income generated over selected period</p>
           </div>
         </div>
 
