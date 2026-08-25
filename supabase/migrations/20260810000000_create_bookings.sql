@@ -35,8 +35,18 @@ CREATE POLICY "Allow public insert to bookings"
 
 CREATE POLICY "Allow staff update access to bookings"
   ON public.bookings FOR UPDATE
-  USING (true);
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('OWNER', 'STAFF')));
 
 CREATE POLICY "Allow staff delete access to bookings"
   ON public.bookings FOR DELETE
-  USING (true);
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('OWNER', 'STAFF')));
+
+-- 6. Add atomic constraint to prevent double bookings
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+ALTER TABLE public.bookings
+  ADD CONSTRAINT no_overlapping_bookings
+  EXCLUDE USING gist (
+    court_id WITH =,
+    booking_date WITH =,
+    int4range(start_hour, end_hour) WITH &&
+  );
