@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import TicketPortal from './TicketPortal';
-import { supabase } from '../../supabaseClient';
+import { TicketPortal } from './TicketPortal';
+import { supabase } from '../../services/supabase';
 
 // Mock the Supabase client
-vi.mock('../../supabaseClient', () => {
+vi.mock('../../services/supabase', () => {
   return {
     supabase: {
       from: vi.fn(),

@@ -142,8 +142,8 @@ export const ContactSection: React.FC = () => {
                 />
               </div>
 
-              <button type="submit" className="btn-primary form-submit-btn">
-                Send Message <Send size={16} />
+              <button type="submit" className="btn-primary form-submit-btn" disabled={isSubmitting}>
+                {isSubmitting ? 'Sending...' : 'Send Message'} <Send size={16} />
               </button>
             </form>
           )}
