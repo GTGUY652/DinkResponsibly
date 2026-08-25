@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Mail, Globe, Send, CheckCircle2 } from 'lucide-react';
+import { supabase } from '../../services/supabase';
 import './ContactSection.css';
 
 export const ContactSection: React.FC = () => {
@@ -8,17 +9,39 @@ export const ContactSection: React.FC = () => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setGuestName('');
-      setGuestEmail('');
-      setSubject('');
-      setMessage('');
-    }, 4000);
+    setIsSubmitting(true);
+    
+    try {
+      const ticketRef = 'TICK-' + Math.floor(1000 + Math.random() * 9000);
+      const { error } = await supabase.from('support_tickets').insert([{
+        ticket_reference: ticketRef,
+        guest_name: guestName,
+        guest_email: guestEmail,
+        subject: subject,
+        message: message,
+        status: 'OPEN'
+      }]);
+
+      if (error) throw error;
+
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setGuestName('');
+        setGuestEmail('');
+        setSubject('');
+        setMessage('');
+      }, 4000);
+    } catch (err) {
+      console.error('Failed to submit ticket:', err);
+      alert('Failed to send ticket. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

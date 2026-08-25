@@ -85,53 +85,34 @@ export const TicketPortal: React.FC = () => {
     const handleSendReply = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedTicket || !replyMessage.trim()) return;
-        setSending(true);
-        setAlert(null);
-        
+
         try {
-            
-            // 1. Dispatch Email via Resend Supabase Edge Function
-            const { error: fnError } = await supabase.functions.invoke('send-email', {
+            setSending(true);
+            setAlert(null);
+
+            // Call the Edge Function instead of directly updating the database
+            const { data, error: functionError } = await supabase.functions.invoke('send-email', {
                 body: {
-                to: selectedTicket.guest_email,
-                subject: `Re: [${selectedTicket.ticket_reference}] ${selectedTicket.subject}`,
-                html: `
-                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                    <h2>DinkResponsibly Support Response</h2>
-                    <p>Hi <strong>${selectedTicket.guest_name}</strong>,</p>
-                    <p>${replyMessage.replace(/\n/g, '<br/>')}</p>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-                    <p style="font-size: 0.85em; color: #777;">Original Inquiry (${selectedTicket.ticket_reference}):</p>
-                    <blockquote style="background: #f9f9f9; padding: 10px; border-left: 3px solid #10b981; margin: 0;">
-                        ${selectedTicket.message}
-                    </blockquote>
-                    </div>
-                `,
-                },
+                    action: 'ticket_reply',
+                    ticket_id: selectedTicket.id,
+                    admin_reply_message: replyMessage
+                }
             });
             
-            if (fnError) {
-                console.warn('Edge Function notice (Email fallback logged):', fnError);
-            }
-            
-            // 2. Update Database Record to RESOLVED
-            const { error: dbError } = await supabase
-                .from('support_tickets')
-                .update({
-                status: 'RESOLVED',
-                admin_reply: replyMessage,
-                replied_by: user?.id,
-                replied_at: new Date().toISOString(),
-                })
-                .eq('id', selectedTicket.id);
-            
-            if (dbError) {
-                setAlert({ type: 'error', text: `Database update failed: ${dbError.message}` });
+            if (functionError) {
+                // Catches 500 network/server errors
+                console.error("Function Error:", functionError);
+                setAlert({ type: 'error', text: `Email dispatch failed: ${functionError.message}` });
+            } else if (data && data.error) {
+                // Catches gracefully handled API errors returned as JSON
+                setAlert({ type: 'error', text: `Email dispatch failed: ${data.error}` });
             } else {
                 setAlert({ type: 'success', text: `Reply sent to ${selectedTicket.guest_email} & ticket resolved!` });
                 setSelectedTicket(null);
                 setReplyMessage('');
-                fetchTickets();
+                // Refresh the list to show the new status
+                // (Assuming you have a fetchTickets() or similar function in the component)
+                fetchTickets(); 
             }
         
         } catch (err) {
@@ -235,13 +216,15 @@ export const TicketPortal: React.FC = () => {
                     )}
                     <div className="ticket-card-bottom">
                         <span className="created-date">{formatDate(t.created_at)}</span>
-                        <button
-                        onClick={() => setSelectedTicket(t)}
-                        className="reply-btn"
-                        >
-                        <MessageSquare className="w-3.5 h-3.5 mr-1" />
-                        {t.status === 'RESOLVED' ? 'View/Resend Reply' : 'Send Email Reply'}
-                        </button>
+                        {t.status !== 'RESOLVED' && (
+                            <button
+                                onClick={() => setSelectedTicket(t)}
+                                className="reply-btn"
+                            >
+                                <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                Send Email Reply
+                            </button>
+                        )}
                     </div>
                     </div>
                 ))}
