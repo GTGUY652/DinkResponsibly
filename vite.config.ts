@@ -7,4 +7,7 @@ export default defineConfig({
   build: {
     sourcemap: false, // Ensures no source files or sourcemaps are published to production
   },
+  preview: {
+    allowedHosts: ['dinkresponsibly.onrender.com'],
+  },
 })
