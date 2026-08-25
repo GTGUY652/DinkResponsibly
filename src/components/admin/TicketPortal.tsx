@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { useAuth } from '../../context/AuthContext';
 import { Search, Filter, MessageSquare, Send, CheckCircle2, Clock, Mail, AlertCircle, X } from 'lucide-react';
 import './TicketPortal.css';
 
@@ -19,7 +18,6 @@ export interface SupportTicket {
 
 
 export const TicketPortal: React.FC = () => {
-    const { user } = useAuth();
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');

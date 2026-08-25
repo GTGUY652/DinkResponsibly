@@ -120,8 +120,8 @@ export const FloatingTicketModal: React.FC = () => {
                   />
                 </div>
 
-                <button type="submit" className="btn-primary full-width">
-                  Submit Ticket <Send size={16} />
+                <button type="submit" className="btn-primary full-width" disabled={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Submit Ticket'} <Send size={16} />
                 </button>
               </form>
             )}
