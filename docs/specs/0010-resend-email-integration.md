@@ -1,6 +1,6 @@
-﻿# 0010-resend-email-integration
+# 0010-resend-email-integration
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Summary
 
