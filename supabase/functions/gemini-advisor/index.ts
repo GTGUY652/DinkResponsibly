@@ -5,6 +5,7 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "@supabase/server";
+import { z } from "npm:zod";
 
 console.log("Hello from Functions!");
 
@@ -26,7 +27,18 @@ export default {
     }
     */
 
-    const { name } = await req.json();
+    const payload = await req.json();
+    
+    const RequestSchema = z.object({
+      name: z.string().max(100).default("World"),
+    });
+
+    const validation = RequestSchema.safeParse(payload);
+    if (!validation.success) {
+      return Response.json({ error: validation.error.flatten() }, { status: 400 });
+    }
+
+    const { name } = validation.data;
 
     return Response.json({
       message: `Hello ${name}!`,

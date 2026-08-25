@@ -123,3 +123,22 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 11. Storage Bucket RLS Policies
+CREATE POLICY "Allow public insert to payment-receipts"
+  ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'payment-receipts' 
+    AND (right(name, 4) IN ('.png', '.jpg') OR right(name, 5) = '.jpeg')
+  );
+
+CREATE POLICY "Allow public read from payment-receipts"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'payment-receipts');
+
+CREATE POLICY "Allow admin delete payment-receipts"
+  ON storage.objects FOR DELETE
+  USING (
+    bucket_id = 'payment-receipts'
+    AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('OWNER', 'STAFF'))
+  );

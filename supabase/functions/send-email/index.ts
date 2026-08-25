@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { z } from "npm:zod";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SENDER_EMAIL = "onboarding@resend.dev"
@@ -11,6 +12,16 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const htmlEncode = (str: string | undefined | null) => {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 };
 
 async function sendResendEmail(to: string, subject: string, html: string) {
@@ -47,7 +58,23 @@ Deno.serve(async (req) => {
     // FLOW 1: BOOKING CONFIRMATION (Triggered by Database Webhook)
     // ---------------------------------------------------------
     if (payload.type === "INSERT" && payload.table === "bookings") {
-      const bookingId = payload.record.id;
+      const WebhookSchema = z.object({
+        type: z.literal("INSERT"),
+        table: z.literal("bookings"),
+        record: z.object({
+          id: z.string().uuid()
+        }).passthrough()
+      });
+
+      const validation = WebhookSchema.safeParse(payload);
+      if (!validation.success) {
+        return new Response(JSON.stringify({ error: validation.error.flatten() }), { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        });
+      }
+
+      const bookingId = validation.data.record.id;
       
       const { data: booking, error: fetchError } = await supabase
         .from("bookings")
@@ -69,21 +96,21 @@ Deno.serve(async (req) => {
             
             <!-- Body -->
             <div style="padding: 32px; background-color: #121820;">
-              <p style="font-size: 16px; margin-top: 0;">Hi <strong>${booking.guest_name}</strong>,</p>
+              <p style="font-size: 16px; margin-top: 0;">Hi <strong>${htmlEncode(booking.guest_name)}</strong>,</p>
               <p style="font-size: 15px; color: #9ca3af;">Thank you for booking with us. Your reservation details have been received and are pending staff verification.</p>
               
               <div style="background-color: #1a222d; border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #2d3748;">
                 <p style="margin: 0 0 10px 0; font-size: 14px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">Booking Reference</p>
-                <p style="margin: 0 0 20px 0; font-size: 28px; font-weight: bold; color: #4ade80; letter-spacing: 2px;">${booking.booking_code}</p>
+                <p style="margin: 0 0 20px 0; font-size: 28px; font-weight: bold; color: #4ade80; letter-spacing: 2px;">${htmlEncode(booking.booking_code)}</p>
                 
                 <table style="width: 100%; border-collapse: collapse;">
                   <tr>
                     <td style="padding: 8px 0; border-bottom: 1px solid #2d3748; color: #9ca3af;">Court</td>
-                    <td style="padding: 8px 0; border-bottom: 1px solid #2d3748; text-align: right; font-weight: 600;">${booking.courts?.name}</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #2d3748; text-align: right; font-weight: 600;">${htmlEncode(booking.courts?.name)}</td>
                   </tr>
                   <tr>
                     <td style="padding: 8px 0; border-bottom: 1px solid #2d3748; color: #9ca3af;">Date</td>
-                    <td style="padding: 8px 0; border-bottom: 1px solid #2d3748; text-align: right; font-weight: 600;">${booking.booking_date}</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #2d3748; text-align: right; font-weight: 600;">${htmlEncode(booking.booking_date)}</td>
                   </tr>
                   <tr>
                     <td style="padding: 8px 0; border-bottom: 1px solid #2d3748; color: #9ca3af;">Time</td>
@@ -96,11 +123,12 @@ Deno.serve(async (req) => {
                 </table>
               </div>
               
-              <p style="font-size: 14px; color: #9ca3af; margin-bottom: 10px;">Payment Reference ending in: <strong>${booking.payment_reference_last4}</strong></p>
+              <p style="font-size: 14px; color: #9ca3af; margin-bottom: 10px;">Payment Reference ending in: <strong>${htmlEncode(booking.payment_reference_last4)}</strong></p>
               
               <div style="text-align: center; margin-top: 30px;">
                 <p style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Your Attached Receipt</p>
-                <img src="${booking.receipt_url}" alt="Payment Receipt" style="max-width: 100%; border-radius: 8px; border: 2px solid #2d3748;" />
+                <!-- Safe to use URL directly if it's already a URL from Supabase, but encode to be sure -->
+                <img src="${htmlEncode(booking.receipt_url)}" alt="Payment Receipt" style="max-width: 100%; border-radius: 8px; border: 2px solid #2d3748;" />
               </div>
               
             </div>
@@ -147,6 +175,22 @@ Deno.serve(async (req) => {
     // FLOW 2: SUPPORT TICKET REPLY (Triggered by Client API Call)
     // ---------------------------------------------------------
     if (payload.action === "ticket_reply") {
+      const TicketReplySchema = z.object({
+        action: z.literal("ticket_reply"),
+        ticket_id: z.string().uuid(),
+        admin_reply_message: z.string().min(1).max(2000)
+      });
+      
+      const validation = TicketReplySchema.safeParse(payload);
+      if (!validation.success) {
+        return new Response(JSON.stringify({ error: validation.error.flatten() }), { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        });
+      }
+      
+      const { ticket_id, admin_reply_message } = validation.data;
+
       const authHeader = req.headers.get("Authorization");
       if (!authHeader) throw new Error("Missing Authorization header");
       
@@ -162,8 +206,6 @@ Deno.serve(async (req) => {
       if (!userProfile || (userProfile.role !== "OWNER" && userProfile.role !== "STAFF")) {
         throw new Error("Forbidden: insufficient permissions");
       }
-      
-      const { ticket_id, admin_reply_message } = payload;
       
       const { data: ticket, error: ticketError } = await supabase
         .from("support_tickets")
@@ -185,12 +227,12 @@ Deno.serve(async (req) => {
             
             <!-- Body -->
             <div style="padding: 32px; background-color: #121820;">
-              <p style="font-size: 16px; margin-top: 0;">Hi <strong>${ticket.guest_name}</strong>,</p>
-              <p style="font-size: 15px; color: #9ca3af;">We have an update regarding your support ticket (<span style="color: #4ade80; font-weight: bold;">${ticket.ticket_reference}</span>):</p>
+              <p style="font-size: 16px; margin-top: 0;">Hi <strong>${htmlEncode(ticket.guest_name)}</strong>,</p>
+              <p style="font-size: 15px; color: #9ca3af;">We have an update regarding your support ticket (<span style="color: #4ade80; font-weight: bold;">${htmlEncode(ticket.ticket_reference)}</span>):</p>
               
               <!-- Reply Box -->
               <div style="background-color: #1a222d; border-radius: 8px; padding: 24px; margin: 25px 0; border-left: 4px solid #4ade80;">
-                <p style="margin: 0; font-size: 16px; color: #f3f4f6; white-space: pre-wrap;">${admin_reply_message}</p>
+                <p style="margin: 0; font-size: 16px; color: #f3f4f6; white-space: pre-wrap;">${htmlEncode(admin_reply_message)}</p>
               </div>
               
               <p style="font-size: 15px; color: #9ca3af; margin-top: 30px;">Best regards,<br/><strong style="color: #f3f4f6;">DinkResponsibly Support Team</strong></p>
