@@ -203,14 +203,9 @@ export const BookingWizard: React.FC = () => {
     if (currentStep === 3) {
       return selectedHours.length > 0;
     }
+    // For step 4, we always let them click Next so we can show specific error messages!
     if (currentStep === 4) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return (
-        guestDetails.name.trim().length > 0 &&
-        emailRegex.test(guestDetails.email.trim()) &&
-        guestDetails.phone.trim().length >= 7 &&
-        guestDetails.agreedToTerms
-      );
+      return true; 
     }
     return true;
   };
@@ -222,14 +217,26 @@ export const BookingWizard: React.FC = () => {
         setErrorMessage('The selected court is under maintenance. Please select an operational court.');
       } else if (currentStep === 3 && selectedHours.length === 0) {
         setErrorMessage('Please pick at least one 1-hour time slot to proceed.');
-      } else if (currentStep === 4) {
-        if (!guestDetails.agreedToTerms) {
-          setErrorMessage('You must acknowledge and agree to the No-Refund Policy.');
-        } else {
-          setErrorMessage('Please fill in all guest contact fields with valid details.');
-        }
       }
       return;
+    }
+
+    // Step 4 explicit validation On Click
+    if (currentStep === 4) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (guestDetails.name.trim().length === 0) {
+        setErrorMessage('Please enter your full name.');
+        return;
+      } else if (!emailRegex.test(guestDetails.email.trim())) {
+        setErrorMessage('Please enter a valid email address (e.g., name@gmail.com).');
+        return;
+      } else if (guestDetails.phone.trim().length < 7) {
+        setErrorMessage('Please enter a valid contact number.');
+        return;
+      } else if (!guestDetails.agreedToTerms) {
+        setErrorMessage('You must acknowledge and agree to the No-Refund Policy.');
+        return;
+      }
     }
 
     const nextStep = currentStep + 1;
