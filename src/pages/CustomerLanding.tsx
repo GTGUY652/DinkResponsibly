@@ -8,8 +8,9 @@ import { FloatingTicketModal } from '../components/customer/FloatingTicketModal'
 import './CustomerLanding.css';
 
 export const CustomerLanding: React.FC = () => {
-    return (
+  return (
     <div className="customer-landing-root">
+      <div className="noise-overlay" />
       <CustomerNavbar />
       <main className="customer-main-content">
         <HeroSection />
