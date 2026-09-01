@@ -69,7 +69,6 @@ export const CustomerNavbar: React.FC = () => {
           </nav>
 
           <button onClick={() => scrollToSection('availability')} className="nav-cta-btn">
-            <Sparkles size={14} />
             Book Court
           </button>
         </div>
@@ -139,7 +138,6 @@ export const CustomerNavbar: React.FC = () => {
 
               <div className="mobile-drawer-footer">
                 <button onClick={() => scrollToSection('availability')} className="mobile-drawer-cta">
-                  <Sparkles size={16} />
                   Book a Court Now
                 </button>
               </div>

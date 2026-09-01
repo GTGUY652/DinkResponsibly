@@ -23,7 +23,10 @@ export const HeroSection: React.FC = () => {
 
           <div className="hero-cta-group">
             <button onClick={scrollToAvailability} className="btn-primary">
-              Book Court Now <ArrowRight size={18} />
+              Book Court Now 
+              <div className="btn-icon-wrapper">
+                <ArrowRight size={16} />
+              </div>
             </button>
             <button onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })} className="btn-secondary">
               View Amenities

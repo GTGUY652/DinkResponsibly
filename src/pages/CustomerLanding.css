@@ -7,44 +7,20 @@
   overflow-x: hidden;
 }
 
-/* Ambient Background Lighting Blobs */
-.customer-landing-root::before {
-  content: '';
-  position: absolute;
-  top: -150px;
-  left: 15%;
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(163, 230, 53, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.customer-landing-root::after {
-  content: '';
-  position: absolute;
-  top: 800px;
-  right: 10%;
-  width: 700px;
-  height: 700px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.07) 0%, rgba(0, 0, 0, 0) 70%);
-  pointer-events: none;
-  z-index: 0;
-}
+/* Removed Ambient Background Lighting Blobs for a cleaner, high-end look */
 
 .customer-main-content {
+  width: 92%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 1.5rem 2rem 6rem 2rem;
+  padding: 1rem 0 8rem 0;
   position: relative;
   z-index: 1;
 }
 
 @media (max-width: 640px) {
   .customer-main-content {
-    padding: 1rem 0.75rem 5rem 0.75rem;
+    padding: 1rem 0 5rem 0;
   }
 }
 
@@ -53,9 +29,11 @@
 }
 
 .brand-accent {
-  background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-emerald) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
+  /* Solid accent line instead of text gradient */
+  border-bottom: 2px solid var(--accent-lime);
+  display: inline-block;
+  line-height: 1.1;
 }
 
 .customer-footer {

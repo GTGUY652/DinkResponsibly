@@ -400,8 +400,9 @@ export const calculateRevenueOverviewMetrics = (
 export const fetchRevenueOverviewData = async (
   dateRange: string = 'this_month',
   courtFilter: string = 'all',
-  granularity: 'hour' | 'day' | 'week' | 'month' | 'year' = 'month'
+  granularity: 'hour' | 'day' | 'week' | 'month' | 'year' = 'month',
+  refDate: Date = new Date()
 ): Promise<RevenueOverviewData> => {
   const bookings = await fetchAdminBookings();
-  return calculateRevenueOverviewMetrics(bookings, dateRange, courtFilter, granularity);
+  return calculateRevenueOverviewMetrics(bookings, dateRange, courtFilter, granularity, refDate);
 };

@@ -56,6 +56,7 @@
 
 .staff-form input, .staff-form select {
   width: 100%;
+  height: 44px;
   padding: 0.75rem 0.875rem;
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid var(--glass-border);
@@ -143,4 +144,93 @@
   font-size: 0.8rem;
   color: var(--text-muted);
   font-style: italic;
+}
+
+/* Custom Role Picker Dropdown */
+.custom-role-picker {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.role-picker-trigger {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.65rem;
+  color: #ffffff;
+  padding: 0.75rem 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: normal;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 44px;
+  margin-top: 13px;
+}
+
+.role-picker-trigger:hover,
+.role-picker-trigger.active {
+  border-color: var(--accent-lime);
+  box-shadow: 0 0 12px var(--accent-lime-glow);
+}
+
+.role-picker-modal {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.65rem;
+  padding: 0.5rem;
+  z-index: 50;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  
+  /* Slide down/up animation */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.role-picker-modal.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.role-cell {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.role-cell:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.role-cell.selected {
+  background: rgba(163, 230, 53, 0.15);
+  color: var(--accent-lime);
+  border-color: rgba(163, 230, 53, 0.3);
+  font-weight: 600;
 }
