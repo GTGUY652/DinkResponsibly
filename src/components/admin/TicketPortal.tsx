@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { Search, Filter, MessageSquare, Send, CheckCircle2, Clock, Mail, AlertCircle, X } from 'lucide-react';
+import { Search, Filter, MessageSquare, Send, CheckCircle2, Clock, Mail, AlertCircle, X, ChevronDown } from 'lucide-react';
 import './TicketPortal.css';
 
 export interface SupportTicket {
@@ -22,6 +22,20 @@ export const TicketPortal: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+    
+    const [isStatusPickerOpen, setIsStatusPickerOpen] = useState(false);
+    const statusPickerRef = React.useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (statusPickerRef.current && !statusPickerRef.current.contains(target)) {
+                setIsStatusPickerOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Modal State for replying
     const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -165,16 +179,46 @@ export const TicketPortal: React.FC = () => {
                     />
                 </div>
 
-                <div className="select-group">
-                    <Filter className="filter-icon" />
-                    <select
-                        value={selectedStatus}
-                        onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="filter-select">
-                        <option value="ALL">All Statuses</option>
-                        <option value="OPEN">Open Tickets</option>
-                        <option value="RESOLVED">Resolved Tickets</option>
-                    </select>
+                <div className="custom-status-picker" ref={statusPickerRef}>
+                    <button
+                        className={`status-picker-trigger ${isStatusPickerOpen ? 'active' : ''}`}
+                        onClick={() => setIsStatusPickerOpen(!isStatusPickerOpen)}
+                    >
+                        <Filter size={14} style={{ marginRight: '0.25rem' }} />
+                        {selectedStatus === 'ALL' 
+                            ? 'All Statuses' 
+                            : selectedStatus === 'OPEN' ? 'Open Tickets' : 'Resolved Tickets'}
+                        <ChevronDown size={14} style={{ marginLeft: '0.25rem' }} />
+                    </button>
+                    <div className={`status-picker-modal ${isStatusPickerOpen ? 'open' : ''}`}>
+                        <button 
+                            className={`status-cell ${selectedStatus === 'ALL' ? 'selected' : ''}`}
+                            onClick={() => {
+                                setSelectedStatus('ALL');
+                                setIsStatusPickerOpen(false);
+                            }}
+                        >
+                            All Statuses
+                        </button>
+                        <button 
+                            className={`status-cell ${selectedStatus === 'OPEN' ? 'selected' : ''}`}
+                            onClick={() => {
+                                setSelectedStatus('OPEN');
+                                setIsStatusPickerOpen(false);
+                            }}
+                        >
+                            Open Tickets
+                        </button>
+                        <button 
+                            className={`status-cell ${selectedStatus === 'RESOLVED' ? 'selected' : ''}`}
+                            onClick={() => {
+                                setSelectedStatus('RESOLVED');
+                                setIsStatusPickerOpen(false);
+                            }}
+                        >
+                            Resolved Tickets
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -200,7 +244,7 @@ export const TicketPortal: React.FC = () => {
                     <div className="ticket-guest">
                         <strong>{t.guest_name}</strong>
                         <span>
-                        <Mail className="w-3 h-3 inline mr-1" />
+                        <Mail className="w-3 h-3" />
                         {t.guest_email}
                         </span>
                     </div>

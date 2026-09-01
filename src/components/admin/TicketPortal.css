@@ -114,6 +114,9 @@
 .ticket-guest span {
   font-size: 0.8rem;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .ticket-subject {
@@ -350,4 +353,90 @@
 .send-email-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(163, 230, 53, 0.5);
+}
+
+/* Custom Status Picker Dropdown */
+.custom-status-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.status-picker-trigger {
+  background: rgba(7, 11, 20, 0.75);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-picker-trigger:hover,
+.status-picker-trigger.active {
+  border-color: var(--accent-lime);
+  box-shadow: 0 0 15px rgba(163, 230, 53, 0.2);
+}
+
+.status-picker-modal {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  z-index: 50;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  
+  /* Slide down/up animation */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.status-picker-modal.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.status-cell {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.status-cell:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.status-cell.selected {
+  background: rgba(163, 230, 53, 0.15);
+  color: var(--accent-lime);
+  border-color: rgba(163, 230, 53, 0.3);
+  font-weight: 600;
 }
