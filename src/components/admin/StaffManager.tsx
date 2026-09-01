@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../../services/supabase';
 import { useAuth, type UserProfile } from '../../context/AuthContext';
-import { UserPlus, Shield, Mail, UserCheck, Trash2, AlertCircle, CheckCircle2, ShieldAlert, Power } from 'lucide-react';
+import { UserPlus, Shield, Mail, UserCheck, Trash2, AlertCircle, CheckCircle2, ShieldAlert, Power, ChevronDown } from 'lucide-react';
 import './StaffManager.css';
 
 // Secondary client so signing up staff does NOT switch the Owner session
@@ -35,6 +35,20 @@ export const StaffManager: React.FC = () => {
   const [role, setRole] = useState<'STAFF' | 'OWNER'>('STAFF');
   const [creating, setCreating] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [isRolePickerOpen, setIsRolePickerOpen] = useState(false);
+  const rolePickerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (rolePickerRef.current && !rolePickerRef.current.contains(target)) {
+        setIsRolePickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchStaff = async () => {
     setLoading(true);
@@ -225,16 +239,37 @@ export const StaffManager: React.FC = () => {
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="staffRole">Role Level</label>
-                <select
-                  id="staffRole"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as 'STAFF' | 'OWNER')}
+              <div className="form-group custom-role-picker" ref={rolePickerRef}>
+                <label>Role Level</label>
+                <div 
+                    className={`role-picker-trigger ${isRolePickerOpen ? 'active' : ''}`}
+                    onClick={() => setIsRolePickerOpen(!isRolePickerOpen)}
                 >
-                  <option value="STAFF">STAFF (Check-in & Inquiries)</option>
-                  <option value="OWNER">OWNER (Full Admin Access)</option>
-                </select>
+                    <span style={{ flex: 1, textAlign: 'left' }}>
+                        {role === 'STAFF' ? 'STAFF (Check-in & Inquiries)' : 'OWNER (Full Admin Access)'}
+                    </span>
+                    <ChevronDown size={14} />
+                </div>
+                <div className={`role-picker-modal ${isRolePickerOpen ? 'open' : ''}`}>
+                    <div 
+                        className={`role-cell ${role === 'STAFF' ? 'selected' : ''}`}
+                        onClick={() => {
+                            setRole('STAFF');
+                            setIsRolePickerOpen(false);
+                        }}
+                    >
+                        STAFF (Check-in & Inquiries)
+                    </div>
+                    <div 
+                        className={`role-cell ${role === 'OWNER' ? 'selected' : ''}`}
+                        onClick={() => {
+                            setRole('OWNER');
+                            setIsRolePickerOpen(false);
+                        }}
+                    >
+                        OWNER (Full Admin Access)
+                    </div>
+                </div>
               </div>
             </div>
 
