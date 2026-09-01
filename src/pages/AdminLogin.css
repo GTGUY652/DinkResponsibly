@@ -91,7 +91,7 @@
 
 .input-with-icon input {
   width: 100%;
-  padding: 0.85rem 1rem 0.85rem 2.85rem;
+  padding: 0.85rem 1rem 0.85rem 3.5rem !important;
   background: rgba(7, 11, 20, 0.8);
   border: 1px solid var(--glass-border);
   border-radius: 0.75rem;
@@ -99,6 +99,13 @@
   font-family: var(--font-body);
   font-size: 0.95rem;
   transition: all 0.2s ease;
+}
+
+.login-form .btn-primary {
+  width: 100%;
+  padding: 0.85rem;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .input-with-icon input:focus {

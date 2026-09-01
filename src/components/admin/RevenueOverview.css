@@ -21,6 +21,8 @@
   border-radius: 1.25rem;
   padding: 1.15rem 1.5rem;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 12px 32px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 100;
 }
 
 .toolbar-left,
@@ -65,7 +67,12 @@
   box-shadow: 0 0 16px rgba(163, 230, 53, 0.35);
 }
 
-.court-select {
+.custom-court-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.court-picker-trigger {
   background: rgba(7, 11, 20, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.875rem;
@@ -76,11 +83,187 @@
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.court-select:focus {
+.court-picker-trigger:hover,
+.court-picker-trigger.active {
   border-color: var(--accent-lime, #a3e635);
   box-shadow: 0 0 12px rgba(163, 230, 53, 0.25);
+}
+
+.court-picker-modal {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  padding: 0.5rem;
+  z-index: 50;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  
+  /* Slide down/up animation */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.court-picker-modal.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.court-cell {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted, #94a3b8);
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.court-cell:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.court-cell.selected {
+  background: rgba(163, 230, 53, 0.15);
+  color: var(--accent-lime, #a3e635);
+  border-color: rgba(163, 230, 53, 0.3);
+  font-weight: 600;
+}
+
+.custom-month-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.month-picker-trigger {
+  background: rgba(7, 11, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.875rem;
+  color: #ffffff;
+  padding: 0.45rem 1rem;
+  font-size: 0.825rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.month-picker-trigger:hover,
+.month-picker-trigger.active {
+  border-color: var(--accent-lime, #a3e635);
+  box-shadow: 0 0 12px rgba(163, 230, 53, 0.25);
+}
+
+.month-picker-modal {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  padding: 1rem;
+  z-index: 50;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  min-width: 220px;
+  
+  /* Slide down/up animation */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.month-picker-modal.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.month-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding: 0 0.25rem;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.month-picker-header button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.month-picker-header button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.month-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+}
+
+.month-cell {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted, #94a3b8);
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-cell:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.month-cell.selected {
+  background: rgba(163, 230, 53, 0.15);
+  color: var(--accent-lime, #a3e635);
+  border-color: rgba(163, 230, 53, 0.3);
+  font-weight: 600;
 }
 
 .export-csv-btn {

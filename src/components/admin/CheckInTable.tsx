@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../services/supabase';
 import { fetchAdminBookings, updateBookingStatus, deleteBookingRecord, fetchCourts } from '../../services/bookingService';
 import type { BookingRecord, CourtRecord } from '../../services/bookingService';
-import { Search, Calendar, Filter, RefreshCw, Clock, Trash2, FileText } from 'lucide-react';
+import { Search, Calendar, Filter, RefreshCw, Clock, Trash2, FileText, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ReceiptModal } from './ReceiptModal';
 import './CheckInTable.css';
 
@@ -13,10 +13,32 @@ export const CheckInTable: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourt, setSelectedCourt] = useState('ALL');
   const [selectedDate, setSelectedDate] = useState('');
+  
+  // Custom Pickers State
+  const [isCourtPickerOpen, setIsCourtPickerOpen] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(() => new Date());
+  
+  const courtPickerRef = React.useRef<HTMLDivElement>(null);
+  const datePickerRef = React.useRef<HTMLDivElement>(null);
 
   // Receipt Modal State
   const [selectedBookingForReceipt, setSelectedBookingForReceipt] = useState<BookingRecord | null>(null);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (courtPickerRef.current && !courtPickerRef.current.contains(target)) {
+        setIsCourtPickerOpen(false);
+      }
+      if (datePickerRef.current && !datePickerRef.current.contains(target)) {
+        setIsDatePickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadCourts = useCallback(async () => {
     const data = await fetchCourts();
@@ -144,29 +166,122 @@ export const CheckInTable: React.FC = () => {
         </div>
 
         <div className="filter-controls">
-          <div className="select-group">
-            <Filter className="filter-icon" />
-            <select
-              value={selectedCourt}
-              onChange={(e) => setSelectedCourt(e.target.value)}
-              className="filter-select"
+          <div className="custom-court-picker" ref={courtPickerRef}>
+            <button
+              className={`court-picker-trigger ${isCourtPickerOpen ? 'active' : ''}`}
+              onClick={() => setIsCourtPickerOpen(!isCourtPickerOpen)}
             >
-              <option value="ALL">All Courts</option>
-              <option value="Court A">Court A</option>
-              <option value="Court B">Court B</option>
-              <option value="Court C">Court C</option>
-              <option value="Court D">Court D</option>
-            </select>
+              <Filter size={14} style={{ marginRight: '0.25rem' }} />
+              {selectedCourt === 'ALL' 
+                ? 'All Courts' 
+                : courtsList.find(c => c.id === selectedCourt)?.name || selectedCourt}
+              <ChevronDown size={14} style={{ marginLeft: '0.25rem' }} />
+            </button>
+            <div className={`court-picker-modal ${isCourtPickerOpen ? 'open' : ''}`}>
+              <button 
+                className={`court-cell ${selectedCourt === 'ALL' ? 'selected' : ''}`}
+                onClick={() => {
+                  setSelectedCourt('ALL');
+                  setIsCourtPickerOpen(false);
+                }}
+              >
+                All Courts
+              </button>
+              {courtsList.map((court) => (
+                <button 
+                  key={court.id} 
+                  className={`court-cell ${selectedCourt === court.id ? 'selected' : ''}`}
+                  onClick={() => {
+                    setSelectedCourt(court.id);
+                    setIsCourtPickerOpen(false);
+                  }}
+                >
+                  {court.name}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="date-group">
-            <Calendar className="date-icon" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="date-input"
-            />
+          <div className="custom-date-picker" ref={datePickerRef}>
+            <button 
+              className={`date-picker-trigger ${isDatePickerOpen ? 'active' : ''}`}
+              onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+            >
+              <Calendar size={14} style={{ marginRight: '0.25rem' }} />
+              {selectedDate ? new Date(selectedDate).toLocaleDateString() : 'mm/dd/yyyy'}
+            </button>
+            
+            <div className={`date-picker-modal ${isDatePickerOpen ? 'open' : ''}`}>
+              <div className="cal-header">
+                <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}>
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="cal-month-year">
+                  {viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                </span>
+                <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+              <div className="cal-weekdays">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+              </div>
+              <div className="cal-days-grid">
+                {(() => {
+                  const year = viewDate.getFullYear();
+                  const month = viewDate.getMonth();
+                  const firstDay = new Date(year, month, 1).getDay();
+                  const daysInMonth = new Date(year, month + 1, 0).getDate();
+                  const days = [];
+                  
+                  for (let i = 0; i < firstDay; i++) {
+                    days.push(<div key={`empty-${i}`} className="cal-cell empty"></div>);
+                  }
+                  
+                  for (let i = 1; i <= daysInMonth; i++) {
+                    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    const isSelected = selectedDate === dStr;
+                    const isToday = new Date().toISOString().split('T')[0] === dStr;
+                    
+                    days.push(
+                      <button
+                        key={i}
+                        className={`cal-cell ${isSelected ? 'selected' : ''} ${isToday && !isSelected ? 'today' : ''}`}
+                        onClick={() => {
+                          setSelectedDate(dStr);
+                          setIsDatePickerOpen(false);
+                        }}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+                  return days;
+                })()}
+              </div>
+              <div className="cal-footer">
+                <button 
+                  className="cal-btn-clear"
+                  onClick={() => {
+                    setSelectedDate('');
+                    setIsDatePickerOpen(false);
+                  }}
+                >
+                  Clear
+                </button>
+                <button 
+                  className="cal-btn-today"
+                  onClick={() => {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    setSelectedDate(todayStr);
+                    setViewDate(new Date());
+                    setIsDatePickerOpen(false);
+                  }}
+                >
+                  Today
+                </button>
+              </div>
+            </div>
           </div>
 
           <button onClick={fetchBookings} className="refresh-btn" title="Refresh table">
@@ -213,7 +328,7 @@ export const CheckInTable: React.FC = () => {
                       <span className="date-text">{formatDateDisplay(b.booking_date)}</span>
                       <span className="slot-text">
                         <Clock className="w-3 h-3 inline mr-1" />
-                        {formatHourLabel(b.start_hour)} - {formatHourLabel(b.end_hour)} ({b.duration_hours}h)
+                         <p>{formatHourLabel(b.start_hour)} - {formatHourLabel(b.end_hour)} ({b.duration_hours}h)</p>
                       </span>
                     </div>
                   </td>

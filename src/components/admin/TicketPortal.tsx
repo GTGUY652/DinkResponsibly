@@ -190,9 +190,9 @@ export const TicketPortal: React.FC = () => {
                         <span className="ticket-ref">{t.ticket_reference}</span>
                         <span className={`status-pill ${t.status.toLowerCase()}`}>
                         {t.status === 'RESOLVED' ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                            <CheckCircle2 className="w-3.5 h-3.5" />
                         ) : (
-                            <Clock className="w-3.5 h-3.5 mr-1" />
+                            <Clock className="w-3.5 h-3.5" />
                         )}
                         {t.status}
                         </span>

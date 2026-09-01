@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   DollarSign,
   TrendingUp,
@@ -9,6 +9,9 @@ import {
   RefreshCw,
   BarChart3,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -27,8 +30,31 @@ import type { RevenueOverviewData, CourtRecord } from '../../services/bookingSer
 import './RevenueOverview.css';
 
 export const RevenueOverview: React.FC = () => {
+  const monthPickerRef = useRef<HTMLDivElement>(null);
+  const courtPickerRef = useRef<HTMLDivElement>(null);
   const [dateRange, setDateRange] = useState<string>('this_month');
   const [courtFilter, setCourtFilter] = useState<string>('all');
+  const [isCourtPickerOpen, setIsCourtPickerOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+  });
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+  const [navYear, setNavYear] = useState<number>(() => new Date().getFullYear());
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (monthPickerRef.current && !monthPickerRef.current.contains(target)) {
+        setIsMonthPickerOpen(false);
+      }
+      if (courtPickerRef.current && !courtPickerRef.current.contains(target)) {
+        setIsCourtPickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const [courts, setCourts] = useState<CourtRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<RevenueOverviewData | null>(null);
@@ -38,8 +64,9 @@ export const RevenueOverview: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
+      const refDate = dateRange === 'this_month' ? new Date(`${selectedMonth}-01T00:00:00`) : new Date();
       const [resData, courtList] = await Promise.all([
-        fetchRevenueOverviewData(dateRange, courtFilter, derivedGranularity),
+        fetchRevenueOverviewData(dateRange, courtFilter, derivedGranularity, refDate),
         fetchCourts(),
       ]);
       setData(resData);
@@ -53,7 +80,7 @@ export const RevenueOverview: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [dateRange, courtFilter, derivedGranularity]);
+  }, [dateRange, courtFilter, derivedGranularity, selectedMonth]);
 
   const handleExportCSV = () => {
     if (!data) return;
@@ -110,20 +137,93 @@ export const RevenueOverview: React.FC = () => {
             >
               This Month
             </button>
+            {dateRange === 'this_month' && (
+              <div className="custom-month-picker" ref={monthPickerRef}>
+                <button
+                  className={`month-picker-trigger ${isMonthPickerOpen ? 'active' : ''}`}
+                  onClick={() => {
+                    setNavYear(parseInt(selectedMonth.split('-')[0], 10));
+                    setIsMonthPickerOpen(!isMonthPickerOpen);
+                  }}
+                >
+                  {(() => {
+                    const [y, m] = selectedMonth.split('-');
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return `${monthNames[parseInt(m, 10) - 1]} ${y}`;
+                  })()}
+                  <Calendar size={14} />
+                </button>
+
+                <div className={`month-picker-modal ${isMonthPickerOpen ? 'open' : ''}`}>
+                  <div className="month-picker-header">
+                    <button onClick={() => setNavYear((prev) => prev - 1)}>
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span>{navYear}</span>
+                    <button onClick={() => setNavYear((prev) => prev + 1)}>
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                  <div className="month-picker-grid">
+                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(
+                      (mon, index) => {
+                        const mStr = (index + 1).toString().padStart(2, '0');
+                        const value = `${navYear}-${mStr}`;
+                        const isSelected = selectedMonth === value;
+                        return (
+                          <button
+                            key={mon}
+                            className={`month-cell ${isSelected ? 'selected' : ''}`}
+                            onClick={() => {
+                              setSelectedMonth(value);
+                              setIsMonthPickerOpen(false);
+                            }}
+                          >
+                            {mon}
+                          </button>
+                        );
+                      }
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          <select
-            className="court-select"
-            value={courtFilter}
-            onChange={(e) => setCourtFilter(e.target.value)}
-          >
-            <option value="all">All Courts</option>
-            {courts.map((court) => (
-              <option key={court.id} value={court.id}>
-                {court.name}
-              </option>
-            ))}
-          </select>
+          <div className="custom-court-picker" ref={courtPickerRef}>
+            <button
+              className={`court-picker-trigger ${isCourtPickerOpen ? 'active' : ''}`}
+              onClick={() => setIsCourtPickerOpen(!isCourtPickerOpen)}
+            >
+              {courtFilter === 'all' 
+                ? 'All Courts' 
+                : courts.find(c => c.id === courtFilter)?.name || 'All Courts'}
+              <ChevronDown size={14} style={{ marginLeft: '0.25rem' }} />
+            </button>
+            <div className={`court-picker-modal ${isCourtPickerOpen ? 'open' : ''}`}>
+              <button 
+                className={`court-cell ${courtFilter === 'all' ? 'selected' : ''}`}
+                onClick={() => {
+                  setCourtFilter('all');
+                  setIsCourtPickerOpen(false);
+                }}
+              >
+                All Courts
+              </button>
+              {courts.map((court) => (
+                <button 
+                  key={court.id} 
+                  className={`court-cell ${courtFilter === court.id ? 'selected' : ''}`}
+                  onClick={() => {
+                    setCourtFilter(court.id);
+                    setIsCourtPickerOpen(false);
+                  }}
+                >
+                  {court.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="toolbar-right">

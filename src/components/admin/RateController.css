@@ -209,7 +209,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-emerald) 100%);
+  background: var(--accent-lime);
   color: #040c1a;
   font-family: var(--font-body);
   font-weight: 800;
