@@ -406,3 +406,57 @@ export const fetchRevenueOverviewData = async (
   const bookings = await fetchAdminBookings();
   return calculateRevenueOverviewMetrics(bookings, dateRange, courtFilter, granularity, refDate);
 };
+
+// --- AI CONSULTANT ACTION HELPERS ---
+
+export const updateCourtRate = async (
+  courtId: string, 
+  rateType: 'weekday_day_rate' | 'weekday_night_rate' | 'weekend_rate', 
+  newRate: number
+): Promise<void> => {
+  const { error } = await supabase
+    .from('courts')
+    .update({ [rateType]: newRate })
+    .eq('id', courtId);
+    
+  if (error) throw new Error(error.message);
+};
+
+export const disableStaffAccount = async (staffId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_active: false })
+    .eq('id', staffId);
+    
+  if (error) throw new Error(error.message);
+};
+
+export const createMaintenanceBlock = async (
+  courtId: string, 
+  date: string, 
+  startHour: number, 
+  endHour: number, 
+  reason: string
+): Promise<void> => {
+  const blockData = {
+    booking_code: `MAINT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+    court_id: courtId,
+    booking_date: date,
+    start_hour: startHour,
+    end_hour: endHour,
+    duration_hours: endHour - startHour,
+    total_price: 0,
+    guest_name: `SYSTEM MAINTENANCE: ${reason}`,
+    guest_email: 'admin@dinkresponsibly.com',
+    guest_phone: 'N/A',
+    status: 'confirmed' as const,
+  };
+  const { error } = await supabase.from('bookings').insert([blockData]);
+  
+  if (error) {
+    if (error.code === '23P04' || error.message.includes('overlap') || error.message.includes('exclude')) {
+      throw new Error('Slot already taken: A customer booked this slot before the block could be applied.');
+    }
+    throw new Error(error.message);
+  }
+};

@@ -9,6 +9,7 @@ import { StaffManager } from './components/admin/StaffManager';
 import { RevenueOverview } from './components/admin/RevenueOverview';
 import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft, DollarSign } from 'lucide-react';
 import './App.css';
+import { AiConsultantWidget } from './components/admin/AiConsultantWidget';
 
 const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBackToCustomer }) => {
   const { user, profile, loading, signOut } = useAuth();
@@ -93,6 +94,8 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
       {activeTab === 'RATES' && <RateController />}
       {activeTab === 'TICKETS' && <TicketPortal />}
       {activeTab === 'STAFF' && <StaffManager />}
+
+      <AiConsultantWidget />
     </div>
   );
 };
