@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { updateCourtRate, disableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData } from '../../services/bookingService';
+import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData } from '../../services/bookingService';
 import { MessageSquare, X, Send, Bot, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
 
 interface ActionIntent {
-  type: 'update_rate' | 'disable_staff' | 'block_schedule';
+  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule';
   payload: any;
 }
 
@@ -67,7 +67,14 @@ export const AiConsultantWidget: React.FC = () => {
         body: { messages: promptMessages, context: contextData }
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        if (error.context) {
+          const errBody = await error.context.text();
+          console.error("Edge Function Error Details:", errBody);
+          throw new Error(`Server Error: ${errBody}`);
+        }
+        throw new Error(error.message);
+      }
 
       // Supabase automatically parses JSON responses, so 'data' is already an object!
       // But just in case, we'll check if it's a string:
@@ -98,6 +105,8 @@ export const AiConsultantWidget: React.FC = () => {
         await updateCourtRate(action.payload.court_id, action.payload.rate_type, action.payload.new_rate);
       } else if (action.type === 'disable_staff') {
         await disableStaffAccount(action.payload.staff_id);
+      } else if (action.type === 'activate_staff') {
+        await enableStaffAccount(action.payload.staff_id);
       } else if (action.type === 'block_schedule') {
         await createMaintenanceBlock(
           action.payload.court_id, 

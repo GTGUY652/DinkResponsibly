@@ -431,6 +431,15 @@ export const disableStaffAccount = async (staffId: string): Promise<void> => {
   if (error) throw new Error(error.message);
 };
 
+export const enableStaffAccount = async (staffId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_active: true })
+    .eq('id', staffId);
+    
+  if (error) throw new Error(error.message);
+};
+
 export const createMaintenanceBlock = async (
   courtId: string, 
   date: string, 

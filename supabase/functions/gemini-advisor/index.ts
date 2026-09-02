@@ -57,7 +57,8 @@ Deno.serve(async (req) => {
       Available actions you can propose:
       1. update_rate: { court_id: string, new_rate: number, rate_type: 'weekday_day_rate' | 'weekday_night_rate' | 'weekend_rate' }
       2. disable_staff: { staff_id: string }
-      3. block_schedule: { court_id: string, date: string, start_hour: number, end_hour: number, reason: string }
+      3. activate_staff: { staff_id: string }
+      4. block_schedule: { court_id: string, date: string, start_hour: number, end_hour: number, reason: string }
       
       Always return your response in pure JSON format matching this schema exactly:
       {
@@ -68,7 +69,7 @@ Deno.serve(async (req) => {
       Context data provided by the client: ${JSON.stringify(validation.data.context || {})}
     `;
 
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
