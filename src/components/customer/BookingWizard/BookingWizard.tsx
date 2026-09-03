@@ -91,7 +91,8 @@ export const BookingWizard: React.FC = () => {
   // Load Booked Slots from Supabase
   const loadAvailability = useCallback(async () => {
     setLoadingSlots(true);
-    const bookedRanges = await fetchBookedSlots(selectedCourt, formattedDateStr);
+    const idToUse = activeCourtRecord?.id || selectedCourt;
+    const bookedRanges = await fetchBookedSlots(idToUse, formattedDateStr);
     const occupied: number[] = [];
     bookedRanges.forEach((range) => {
       for (let h = range.start_hour; h < range.end_hour; h++) {
@@ -100,7 +101,7 @@ export const BookingWizard: React.FC = () => {
     });
     setBookedHours(occupied);
     setLoadingSlots(false);
-  }, [selectedCourt, formattedDateStr]);
+  }, [selectedCourt, formattedDateStr, activeCourtRecord?.id]);
 
   useEffect(() => {
     void loadAvailability();

@@ -346,6 +346,7 @@ export const CheckInTable: React.FC = () => {
                       <option value="PENDING_VERIFICATION">Pending Verification</option>
                       <option value="APPROVED">Approved</option>
                       <option value="REJECTED">Rejected</option>
+                      <option value="cancelled">Refunded / Cancelled</option>
                     </select>
                   </td>
                   <td>

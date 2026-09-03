@@ -1,7 +1,7 @@
-﻿# 0012. Smart Schedule Manager
+# 0012. Smart Schedule Manager
 
 **Date**: 2026-09-02
-**Status**: Proposed
+**Status**: Accepted
 
 ## Summary
 

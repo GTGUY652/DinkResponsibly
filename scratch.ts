@@ -1,0 +1,1 @@
+import { fetchAdminBookings } from './src/services/bookingService.ts'; fetchAdminBookings().then(console.log);

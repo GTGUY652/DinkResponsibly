@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData } from '../../services/bookingService';
+import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange, flagBookingsForRefund } from '../../services/bookingService';
+import type { BookingRecord } from '../../services/bookingService';
 import { MessageSquare, X, Send, Bot, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
 
 interface ActionIntent {
-  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule';
+  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule' | 'prepare_block';
   payload: any;
 }
 
@@ -17,6 +18,112 @@ interface ChatMessage {
   actionExecuted?: boolean;
 }
 
+const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onComplete: (msgId: string, text: string) => void }> = ({ msgId, action, onComplete }) => {
+  const [startHour, setStartHour] = useState(action.payload.start_hour);
+  const [endHour, setEndHour] = useState(action.payload.end_hour);
+  const [overlaps, setOverlaps] = useState<BookingRecord[]>([]);
+  const [calculating, setCalculating] = useState(true);
+
+  const [courtIds, setCourtIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const checkConflicts = async () => {
+      setCalculating(true);
+      // Fetch master list of courts to map names to UUIDs
+      const allCourts = await fetchCourts();
+      const mappedIds = allCourts
+        .filter(c => action.payload.courts.includes(c.name))
+        .map(c => c.id);
+      
+      setCourtIds(mappedIds);
+
+      const bookings = await fetchBookingsForDateRange(
+        action.payload.start_date,
+        action.payload.end_date,
+        mappedIds
+      );
+      
+      const overlapping = bookings.filter(b => b.start_hour < endHour && b.end_hour > startHour);
+      setOverlaps(overlapping);
+      setCalculating(false);
+    };
+    checkConflicts();
+  }, [startHour, endHour, action.payload]);
+
+  const customerOverlaps = overlaps.filter(b => !b.booking_code.includes('MAINT'));
+  const maintOverlaps = overlaps.filter(b => b.booking_code.includes('MAINT'));
+  const lostRevenue = customerOverlaps.reduce((sum, b) => sum + (b.total_price || 0), 0);
+
+  const handleConfirm = async () => {
+    if (customerOverlaps.length > 0) {
+      alert("Cannot block: Real players are already booked. No refund policy applies. Let staff handle this on the day.");
+      return;
+    }
+
+    try {
+      // Overwrite existing MAINT blocks by deleting them first to free the physical DB slot
+      if (maintOverlaps.length > 0) {
+        for (const b of maintOverlaps) {
+          const { error } = await supabase.from('bookings').delete().eq('id', b.id);
+          if (error) throw new Error(`Failed to remove old block: ${error.message}`);
+        }
+      }
+      
+      const start = new Date(action.payload.start_date);
+      const end = new Date(action.payload.end_date);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        for (const courtId of courtIds) {
+          await createMaintenanceBlock(courtId, dateStr, startHour, endHour, action.payload.reason);
+        }
+      }
+      onComplete(msgId, `\n\n✅ Block executed! ${maintOverlaps.length > 0 ? `Overwrote ${maintOverlaps.length} older maintenance blocks.` : ''}`);
+    } catch (err: any) {
+      alert(err.message || 'Failed to create block');
+    }
+  };
+
+  return (
+    <div className="action-card" style={{ marginTop: '10px' }}>
+      <p><strong>Prepare Block:</strong> {action.payload.reason}</p>
+      <p className="text-xs text-gray-400 mb-2">Courts: {action.payload.courts.join(', ')}</p>
+      <p className="text-xs text-gray-400 mb-2">Dates: {action.payload.start_date} to {action.payload.end_date}</p>
+      
+      <div className="flex flex-col gap-2 mb-3">
+        <label className="text-xs">Start Hour: {startHour}:00</label>
+        <input type="range" min="6" max="23" value={startHour} onChange={e => setStartHour(parseInt(e.target.value))} />
+        <label className="text-xs">End Hour: {endHour}:00</label>
+        <input type="range" min="7" max="24" value={endHour} onChange={e => setEndHour(parseInt(e.target.value))} />
+      </div>
+
+      {calculating ? (
+        <p className="text-xs text-yellow-400">Checking conflicts...</p>
+      ) : customerOverlaps.length > 0 ? (
+        <div className="text-red-400 text-xs mb-3 p-2 border border-red-500 rounded bg-red-900 bg-opacity-20">
+          ⚠️ Warning: {customerOverlaps.length} real player(s) booked during this time (₱{lostRevenue}).
+          <br/><strong>Action:</strong> Let staff handle this on the day to avoid losing revenue.
+        </div>
+      ) : maintOverlaps.length > 0 ? (
+        <div className="text-blue-400 text-xs mb-3 p-2 border border-blue-500 rounded bg-blue-900 bg-opacity-20">
+          ℹ️ Note: Overlaps with {maintOverlaps.length} existing maintenance blocks. Proceeding will overwrite them.
+        </div>
+      ) : (
+        <p className="text-emerald-400 text-xs mb-3">✅ No scheduling conflicts detected.</p>
+      )}
+
+      {customerOverlaps.length > 0 ? (
+        <button disabled className="action-btn" style={{ background: '#4b5563', cursor: 'not-allowed' }}>
+          Cannot Override Players
+        </button>
+      ) : (
+        <button onClick={handleConfirm} className="action-btn" style={{ background: maintOverlaps.length > 0 ? '#3b82f6' : '#10b981' }}>
+          <CheckCircle size={14} className="inline mr-1" /> {maintOverlaps.length > 0 ? 'Overwrite Blocks' : 'Confirm Block'}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export const AiConsultantWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{
@@ -24,6 +131,10 @@ export const AiConsultantWidget: React.FC = () => {
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleActionComplete = (msgId: string, extraText: string = '\n\n✅ Action Executed Successfully!') => {
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, actionExecuted: true, text: m.text + extraText } : m));
+  };
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +149,8 @@ export const AiConsultantWidget: React.FC = () => {
     const courts = await fetchCourts();
     const { data: staff } = await supabase.from('profiles').select('id, full_name, email, role, is_active');
     const revenue = await fetchRevenueOverviewData('last_7_days');
-    return { courts, staff, revenue };
+    const currentDate = new Date().toISOString();
+    return { courts, staff, revenue, currentDate };
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -118,7 +230,7 @@ export const AiConsultantWidget: React.FC = () => {
       }
 
       // Mark as executed
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, actionExecuted: true, text: m.text + '\n\n✅ Action Executed Successfully!' } : m));
+      handleActionComplete(msgId);
     } catch (err: any) {
       alert(err.message || "Failed to execute action.");
     }
@@ -148,12 +260,16 @@ export const AiConsultantWidget: React.FC = () => {
                 
                 {/* Action Confirmation Card */}
                 {msg.action && !msg.actionExecuted && msg.role === 'model' && (
-                  <div className="action-card">
-                    <p>Suggested Action: {msg.action.type.replace('_', ' ').toUpperCase()}</p>
-                    <button onClick={() => executeAction(msg.id, msg.action!)} className="action-btn">
-                      <CheckCircle size={14} className="inline mr-1" /> Confirm Action
-                    </button>
-                  </div>
+                  msg.action.type === 'prepare_block' ? (
+                    <InteractiveBlockCard msgId={msg.id} action={msg.action} onComplete={handleActionComplete} />
+                  ) : (
+                    <div className="action-card">
+                      <p>Suggested Action: {msg.action.type.replace('_', ' ').toUpperCase()}</p>
+                      <button onClick={() => executeAction(msg.id, msg.action!)} className="action-btn">
+                        <CheckCircle size={14} className="inline mr-1" /> Confirm Action
+                      </button>
+                    </div>
+                  )
                 )}
               </div>
             ))}

@@ -14,7 +14,7 @@ export interface BookingRecord {
   guest_name: string;
   guest_email: string;
   guest_phone: string;
-  status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'cancelled' | 'confirmed' | 'checked_in';
+  status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'cancelled' | 'CANCELLED' | 'confirmed' | 'checked_in' | 'NEEDS_REFUND';
   payment_reference_last4?: string;
   receipt_url?: string;
   created_at?: string;
@@ -80,9 +80,15 @@ const isCourtMatch = (courtA: string, courtB: string): boolean => {
   if (courtA === courtB) return true;
   const a = courtA.toLowerCase();
   const b = courtB.toLowerCase();
+  
+  // If either is a UUID, they only match if they are perfectly equal (handled above).
+  // If one is a name and the other is a UUID, this logic previously caused bugs.
+  // Instead, rely on exact matching or strict substring matching if both are names.
+  if (a.includes('-') && a.length > 20) return false; // a is UUID
+  if (b.includes('-') && b.length > 20) return false; // b is UUID
+
   if (a.includes('court a') && b.includes('court a')) return true;
-  if (a.includes('court b') && (b.includes('court b') || b.length > 20)) return true;
-  if (b.includes('court b') && (a.includes('court b') || a.length > 20)) return true;
+  if (a.includes('court b') && b.includes('court b')) return true;
   if (a.includes('court c') && b.includes('court c')) return true;
   if (a.includes('court d') && b.includes('court d')) return true;
   return false;
@@ -130,26 +136,47 @@ export const createBooking = async (
 };
 
 export const fetchAdminBookings = async (): Promise<BookingRecord[]> => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*, courts(name)')
-    .order('booking_date', { ascending: true })
-    .order('start_hour', { ascending: true });
+  const [bookingsRes, courtsRes] = await Promise.all([
+    supabase
+      .from('bookings')
+      .select('*')
+      .order('booking_date', { ascending: true })
+      .order('start_hour', { ascending: true }),
+    supabase.from('courts').select('id, name')
+  ]);
 
-  if (error) {
-    console.error('Error fetching admin bookings:', error.message);
+  if (bookingsRes.error) {
+    console.error('Error fetching admin bookings:', bookingsRes.error.message);
     return [];
   }
 
-  return (data || []).map((row: any) => ({
-    ...row,
-    court_name: row.courts?.name || row.court_id,
-  })) as BookingRecord[];
+  const courtsMap: Record<string, string> = {};
+  if (courtsRes.data) {
+    courtsRes.data.forEach(c => {
+      courtsMap[c.id] = c.name;
+    });
+  }
+
+  return (bookingsRes.data || []).map((row: any) => {
+    // Determine court name either from our lookup map or by a hacky string match if it was stored as a name
+    let cName = row.court_id;
+    if (courtsMap[row.court_id]) {
+      cName = courtsMap[row.court_id];
+    } else {
+      // If it's already a name, try to standardize it
+      const match = Object.values(courtsMap).find(n => n.toLowerCase() === row.court_id.toLowerCase());
+      if (match) cName = match;
+    }
+    return {
+      ...row,
+      court_name: cName,
+    };
+  }) as BookingRecord[];
 };
 
 export const updateBookingStatus = async (
   id: string,
-  status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'cancelled' | 'confirmed' | 'checked_in'
+  status: 'PENDING_VERIFICATION' | 'APPROVED' | 'REJECTED' | 'cancelled' | 'confirmed' | 'checked_in' | 'NEEDS_REFUND'
 ): Promise<void> => {
   const { error } = await supabase
     .from('bookings')
@@ -211,8 +238,9 @@ export const calculateRevenueOverviewMetrics = (
     ? bookings
     : bookings.filter((b) => isCourtMatch(b.court_id, courtFilter));
 
-  const activeBookings = filteredBookings.filter((b) => b.status !== 'cancelled');
-  const cancelledBookings = filteredBookings.filter((b) => b.status === 'cancelled');
+  const realBookings = filteredBookings.filter((b) => !b.booking_code || !b.booking_code.includes('MAINT'));
+  const activeBookings = realBookings.filter((b) => b.status !== 'cancelled' && b.status !== 'CANCELLED');
+  const cancelledBookings = realBookings.filter((b) => b.status === 'cancelled' || b.status === 'CANCELLED');
 
   const todayRev = activeBookings
     .filter((b) => b.booking_date === todayStr)
@@ -458,7 +486,7 @@ export const createMaintenanceBlock = async (
     guest_name: `SYSTEM MAINTENANCE: ${reason}`,
     guest_email: 'admin@dinkresponsibly.com',
     guest_phone: 'N/A',
-    status: 'confirmed' as const,
+    status: 'APPROVED' as const,
   };
   const { error } = await supabase.from('bookings').insert([blockData]);
   
@@ -467,5 +495,43 @@ export const createMaintenanceBlock = async (
       throw new Error('Slot already taken: A customer booked this slot before the block could be applied.');
     }
     throw new Error(error.message);
+  }
+};
+
+export const fetchBookingsForDateRange = async (
+  startDate: string,
+  endDate: string,
+  courtIds: string[]
+): Promise<BookingRecord[]> => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .gte('booking_date', startDate)
+    .lte('booking_date', endDate)
+    .in('court_id', courtIds)
+    .not('status', 'in', '("cancelled","REJECTED")');
+
+  if (error) {
+    console.error('Error fetching bookings for date range:', error.message);
+    return [];
+  }
+  return data as BookingRecord[];
+};
+
+export const flagBookingsForRefund = async (bookings: BookingRecord[]): Promise<void> => {
+  if (!bookings.length) return;
+  
+  for (const b of bookings) {
+    const { error } = await supabase
+      .from('bookings')
+      .update({ 
+        status: 'CANCELLED',
+        guest_name: b.guest_name.includes('[NEEDS_REFUND]') ? b.guest_name : `[NEEDS_REFUND] ${b.guest_name}`
+      })
+      .eq('id', b.id);
+
+    if (error) {
+      throw new Error(`Failed to flag booking for refund: ${error.message}`);
+    }
   }
 };
