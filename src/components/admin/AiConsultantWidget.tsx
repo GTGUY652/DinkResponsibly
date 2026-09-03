@@ -138,7 +138,13 @@ export const AiConsultantWidget: React.FC = () => {
           <div className="ai-chat-messages">
             {messages.map(msg => (
               <div key={msg.id} className={`chat-bubble ${msg.role}`}>
-                <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                <div style={{ whiteSpace: 'pre-wrap' }}>
+                  {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) => 
+                    part.startsWith('**') && part.endsWith('**') 
+                      ? <strong key={i} className="text-emerald-300">{part.slice(2, -2)}</strong> 
+                      : part
+                  )}
+                </div>
                 
                 {/* Action Confirmation Card */}
                 {msg.action && !msg.actionExecuted && msg.role === 'model' && (

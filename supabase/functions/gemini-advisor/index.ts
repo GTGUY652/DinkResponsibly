@@ -62,14 +62,14 @@ Deno.serve(async (req) => {
       
       Always return your response in pure JSON format matching this schema exactly:
       {
-        "text_response": "Your friendly text explanation and analysis",
+        "text_response": "Your friendly text explanation. IMPORTANT: When listing data like courts, rates, or staff, ALWAYS use bullet points (\\n- ) and bold text (**text**) to make it easy to read.",
         "suggested_action": { "type": "action_name", "payload": { ... } } // omit if no action is needed
       }
       
       Context data provided by the client: ${JSON.stringify(validation.data.context || {})}
     `;
 
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
