@@ -214,7 +214,18 @@ export const AiConsultantWidget: React.FC = () => {
   const executeAction = async (msgId: string, action: ActionIntent) => {
     try {
       if (action.type === 'update_rate') {
-        await updateCourtRate(action.payload.court_id, action.payload.rate_type, action.payload.new_rate);
+        const allCourts = await fetchCourts();
+        // If courts array is present, map by name. If fallback to court_id string, use that.
+        let targetIds: string[] = [];
+        if (action.payload.courts && Array.isArray(action.payload.courts)) {
+          targetIds = allCourts.filter(c => action.payload.courts.includes(c.name)).map(c => c.id);
+        } else if (action.payload.court_id) {
+          targetIds = [action.payload.court_id];
+        }
+
+        for (const courtId of targetIds) {
+          await updateCourtRate(courtId, action.payload.rate_type, action.payload.new_rate);
+        }
       } else if (action.type === 'disable_staff') {
         await disableStaffAccount(action.payload.staff_id);
       } else if (action.type === 'activate_staff') {
