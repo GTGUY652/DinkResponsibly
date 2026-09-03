@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange, flagBookingsForRefund } from '../../services/bookingService';
+import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange } from '../../services/bookingService';
 import type { BookingRecord } from '../../services/bookingService';
 import { MessageSquare, X, Send, Bot, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';

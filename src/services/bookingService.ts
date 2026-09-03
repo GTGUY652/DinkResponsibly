@@ -517,21 +517,4 @@ export const fetchBookingsForDateRange = async (
   }
   return data as BookingRecord[];
 };
-
-export const flagBookingsForRefund = async (bookings: BookingRecord[]): Promise<void> => {
-  if (!bookings.length) return;
-  
-  for (const b of bookings) {
-    const { error } = await supabase
-      .from('bookings')
-      .update({ 
-        status: 'CANCELLED',
-        guest_name: b.guest_name.includes('[NEEDS_REFUND]') ? b.guest_name : `[NEEDS_REFUND] ${b.guest_name}`
-      })
-      .eq('id', b.id);
-
-    if (error) {
-      throw new Error(`Failed to flag booking for refund: ${error.message}`);
-    }
-  }
-};
+
