@@ -1,7 +1,7 @@
-﻿# 0011. AI Action-Taking Consultant
+# 0011. AI Action-Taking Consultant
 
 **Date**: 2026-09-01
-**Status**: Proposed
+**Status**: Implemented
 
 ## Summary
 

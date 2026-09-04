@@ -1,7 +1,7 @@
-﻿# 0013. Actionable Zero-Cost Heatmap
+# 0013. Actionable Zero-Cost Heatmap
 
 **Date**: 2026-09-03
-**Status**: Proposed
+**Status**: Implemented
 
 ## Summary
 
