@@ -28,8 +28,8 @@
 }
 
 .ai-chat-window {
-  width: 380px;
-  height: 500px;
+  width: 460px;
+  height: 580px;
   background: #121820;
   border: 1px solid #1f2937;
   border-radius: 12px;
@@ -156,4 +156,37 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+.ai-thinking {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 16px !important;
+  width: fit-content;
+  opacity: 0.8;
+}
+
+.ai-thinking .dot {
+  width: 8px;
+  height: 8px;
+  background-color: #6ee7b7;
+  border-radius: 50%;
+  animation: ai-bounce 1.4s infinite ease-in-out both;
+}
+
+.ai-thinking .dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.ai-thinking .dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes ai-bounce {
+  0%, 80%, 100% { 
+    transform: scale(0);
+  } 40% { 
+    transform: scale(1);
+  }
 }

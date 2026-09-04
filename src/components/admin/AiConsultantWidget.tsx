@@ -4,9 +4,10 @@ import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMainten
 import type { BookingRecord } from '../../services/bookingService';
 import { MessageSquare, X, Send, Bot, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
+import { ActionableHeatmap } from './ActionableHeatmap';
 
 interface ActionIntent {
-  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule' | 'prepare_block';
+  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule' | 'prepare_block' | 'show_heatmap';
   payload: any;
 }
 
@@ -273,6 +274,11 @@ export const AiConsultantWidget: React.FC = () => {
                 {msg.action && !msg.actionExecuted && msg.role === 'model' && (
                   msg.action.type === 'prepare_block' ? (
                     <InteractiveBlockCard msgId={msg.id} action={msg.action} onComplete={handleActionComplete} />
+                  ) : msg.action.type === 'show_heatmap' ? (
+                    <ActionableHeatmap 
+                       payload={msg.action.payload} 
+                       onActionClick={(text) => setInput(text)} 
+                    />
                   ) : (
                     <div className="action-card">
                       <p>Suggested Action: {msg.action.type.replace('_', ' ').toUpperCase()}</p>
@@ -282,9 +288,16 @@ export const AiConsultantWidget: React.FC = () => {
                     </div>
                   )
                 )}
+
               </div>
             ))}
-            {loading && <div className="chat-bubble model opacity-70">Thinking...</div>}
+            {loading && (
+              <div className="chat-bubble model ai-thinking">
+                <span className="dot"></span>
+                <span className="dot"></span>
+                <span className="dot"></span>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
