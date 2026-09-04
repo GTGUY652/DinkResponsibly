@@ -5,9 +5,10 @@ import type { BookingRecord, CourtRecord } from '../../services/bookingService'
 interface ActionableHeatmapProps {
   payload: { start_date: string; end_date: string };
   onActionClick: (prefilledText: string) => void;
+  onDataAnalyzed?: (summary: string) => void;
 }
 
-export const ActionableHeatmap: React.FC<ActionableHeatmapProps> = ({ payload, onActionClick }) => {
+export const ActionableHeatmap: React.FC<ActionableHeatmapProps> = ({ payload, onActionClick, onDataAnalyzed }) => {
   const [activeTab, setActiveTab] = useState<'peak_hours' | 'court_compare'>('peak_hours');
   const [metric, setMetric] = useState<'utilization' | 'revenue'>('utilization');
   const [loading, setLoading] = useState(true);
@@ -30,8 +31,6 @@ export const ActionableHeatmap: React.FC<ActionableHeatmapProps> = ({ payload, o
     };
     loadData();
   }, [payload]);
-
-  if (loading) return <div className="text-xs text-emerald-400 mt-2 p-2 bg-emerald-900 bg-opacity-20 rounded border border-emerald-500">Fetching booking data for {payload.start_date} to {payload.end_date}...</div>;
 
   // Process Court Comparison Data
   const courtStats = courts.map(court => {
@@ -56,6 +55,42 @@ export const ActionableHeatmap: React.FC<ActionableHeatmapProps> = ({ payload, o
   });
   
   const maxPeakValue = Math.max(...peakData.map(d => d[metric])) || 1;
+
+  useEffect(() => {
+    if (loading || bookings.length === 0 || courts.length === 0 || !onDataAnalyzed) return;
+    
+    // 1. Peak Hour & Court
+    const topHour = [...peakData].sort((a,b) => b.utilization - a.utilization)[0];
+    const topCourt = [...courtStats].sort((a,b) => b.revenue - a.revenue)[0];
+    
+    // 2. Day of Week Analysis
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayStats = dayNames.map(name => ({ name, bookings: 0 }));
+    
+    bookings.forEach(b => {
+      if (!b.booking_date) return;
+      const parts = b.booking_date.split('-');
+      if (parts.length === 3) {
+        // Parse safely to avoid timezone shifting
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        dayStats[d.getDay()].bookings += 1;
+      }
+    });
+    
+    const sortedDays = [...dayStats].sort((a, b) => b.bookings - a.bookings);
+    const daySummary = sortedDays.map(d => `${d.name} (${d.bookings} bookings)`).join(', ');
+    
+    if (topHour && topCourt) {
+      const summary = `[System Note: The heatmap was just displayed to the user for ${payload.start_date} to ${payload.end_date}. 
+Peak Time: ${topHour.label} (${topHour.utilization} bookings). 
+Top Court: ${topCourt.name} (₱${topCourt.revenue}). 
+Weekly Day Breakdown (Busiest to Quietest): ${daySummary}. 
+Use this exact data to provide highly detailed insights about their busiest days, quietest days, and peak hours. Answer naturally without mentioning this system note.]`;
+      onDataAnalyzed(summary);
+    }
+  }, [loading, bookings, courts]);
+
+  if (loading) return <div className="text-xs text-emerald-400 mt-2 p-2 bg-emerald-900 bg-opacity-20 rounded border border-emerald-500">Fetching booking data for {payload.start_date} to {payload.end_date}...</div>;
 
   return (
     <div className="action-card" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>

@@ -17,6 +17,7 @@ interface ChatMessage {
   text: string;
   action?: ActionIntent;
   actionExecuted?: boolean;
+  isHidden?: boolean;
 }
 
 const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onComplete: (msgId: string, text: string) => void }> = ({ msgId, action, onComplete }) => {
@@ -260,7 +261,7 @@ export const AiConsultantWidget: React.FC = () => {
           </div>
           
           <div className="ai-chat-messages">
-            {messages.map(msg => (
+            {messages.filter(msg => !msg.isHidden).map(msg => (
               <div key={msg.id} className={`chat-bubble ${msg.role}`}>
                 <div style={{ whiteSpace: 'pre-wrap' }}>
                   {msg.text.split(/(\*\*.*?\*\*)/g).map((part, i) => 
@@ -278,6 +279,12 @@ export const AiConsultantWidget: React.FC = () => {
                     <ActionableHeatmap 
                        payload={msg.action.payload} 
                        onActionClick={(text) => setInput(text)} 
+                       onDataAnalyzed={(summary) => {
+                         setMessages(prev => {
+                           if (prev.some(m => m.text === summary)) return prev;
+                           return [...prev, { id: 'sys-' + Date.now(), role: 'user', text: summary, isHidden: true }];
+                         });
+                       }}
                     />
                   ) : (
                     <div className="action-card">
