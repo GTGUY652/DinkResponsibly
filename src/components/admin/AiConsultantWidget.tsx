@@ -150,8 +150,8 @@ export const AiConsultantWidget: React.FC = () => {
     // Fetch live data so the AI knows IDs and metrics
     const courts = await fetchCourts();
     const { data: staff } = await supabase.from('profiles').select('id, full_name, email, role, is_active');
-    const revenue = await fetchRevenueOverviewData('last_7_days');
-    const currentDate = new Date().toISOString();
+    const revenue = await fetchRevenueOverviewData('this_month', 'all', 'day');
+    const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     return { courts, staff, revenue, currentDate };
   };
 
