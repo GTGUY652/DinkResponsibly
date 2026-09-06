@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       2. disable_staff: { staff_id: string }
       3. activate_staff: { staff_id: string }
       4. prepare_block: { start_date: string, end_date: string, courts: string[], start_hour: number, end_hour: number, reason: string } // courts should be an array of court names (e.g., ["Court A", "Court B"])
-      5. show_heatmap: { start_date: string, end_date: string } // ONLY use this action when the admin EXPLICITLY asks to GENERATE or SHOW a new heatmap or data report. DO NOT use this action if they are just asking follow-up questions, asking for advice, or discussing an existing heatmap. If they ask for advice, just provide a text_response and omit the action.
+      5. show_heatmap: { start_date: string, end_date: string } // ONLY use this action when the admin EXPLICITLY commands you to GENERATE or SHOW a heatmap. CRITICAL RULE: If your text_response asks the user for permission (e.g., "Shall I generate a heatmap?"), you MUST OMIT this action from your JSON. Wait for them to say "yes" before actually executing the action!
       
       Always return your response in pure JSON format matching this schema exactly:
       {
