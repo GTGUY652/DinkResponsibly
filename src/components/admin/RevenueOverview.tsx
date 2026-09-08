@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  DollarSign,
+  PhilippinePeso,
   TrendingUp,
   TrendingDown,
   Calendar,
@@ -240,7 +240,7 @@ export const RevenueOverview: React.FC = () => {
           <div className="kpi-header">
             <span>Today's Revenue</span>
             <div className="kpi-icon-wrapper">
-              <DollarSign size={18} />
+              <PhilippinePeso size={18} />
             </div>
           </div>
           <div className="kpi-value">
@@ -328,7 +328,7 @@ export const RevenueOverview: React.FC = () => {
 
         <div className="sub-metric-card">
           <div className="sub-metric-icon">
-            <DollarSign size={20} />
+            <PhilippinePeso size={20} />
           </div>
           <div className="sub-metric-info">
             <span className="sub-metric-label">Refunds & Adjustments</span>

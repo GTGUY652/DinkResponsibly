@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { DollarSign, ShieldAlert, Save, Power, CheckCircle, AlertTriangle, Sun, Moon, CalendarDays } from 'lucide-react';
+import { PhilippinePeso, ShieldAlert, Save, Power, CheckCircle, AlertTriangle, Sun, Moon, CalendarDays } from 'lucide-react';
 import './RateController.css';
 
 export interface CourtItem {
@@ -158,7 +158,7 @@ export const RateController: React.FC = () => {
                             Weekday Daytime (6 AM - 4 PM)
                         </label>
                         <div className="input-with-symbol">
-                            <DollarSign className="currency-symbol" />
+                            <PhilippinePeso className="currency-symbol" />
                             <input
                             id={`day-${court.id}`}
                             type="number"
@@ -179,7 +179,7 @@ export const RateController: React.FC = () => {
                             Weekday Nighttime (5 PM - 2 AM)
                         </label>
                         <div className="input-with-symbol">
-                            <DollarSign className="currency-symbol" />
+                            <PhilippinePeso className="currency-symbol" />
                             <input
                             id={`night-${court.id}`}
                             type="number"
@@ -200,7 +200,7 @@ export const RateController: React.FC = () => {
                             Weekend Flat Rate (Sat - Sun)
                         </label>
                         <div className="input-with-symbol">
-                            <DollarSign className="currency-symbol" />
+                            <PhilippinePeso className="currency-symbol" />
                             <input
                             id={`weekend-${court.id}`}
                             type="number"
