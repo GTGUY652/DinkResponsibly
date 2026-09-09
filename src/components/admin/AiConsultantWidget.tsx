@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
 import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange } from '../../services/bookingService';
 import type { BookingRecord } from '../../services/bookingService';
-import { MessageSquare, X, Send, Bot, CheckCircle, } from 'lucide-react';
+import { X, Send, Bot, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
 import { ActionableHeatmap } from './ActionableHeatmap';
+import dinkAiIcon from '../../assets/dink_ai_chat_icon.jpg';
 
 interface ActionIntent {
   type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule' | 'prepare_block' | 'show_heatmap';
@@ -129,7 +130,7 @@ const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onCo
 export const AiConsultantWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{
-    id: '1', role: 'model', text: "Hello! I'm your AI Consultant. Ask me about revenue, or ask me to block a court, update a rate, or disable a staff member."
+    id: '1', role: 'model', text: "Hello! I'm Dink-Ai. Ask me about revenue, or ask me to block a court, update a rate, or disable a staff member."
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -254,7 +255,7 @@ export const AiConsultantWidget: React.FC = () => {
       {isOpen && (
         <div className="ai-chat-window">
           <div className="ai-chat-header">
-            <h3><Bot size={18} className="text-emerald-400" /> AI Action Consultant</h3>
+            <h3><img src={dinkAiIcon} alt="Dink-Ai" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} /> Dink-Ai</h3>
             <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
               <X size={20} />
             </button>
@@ -322,8 +323,8 @@ export const AiConsultantWidget: React.FC = () => {
         </div>
       )}
 
-      <button className="ai-toggle-btn" onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+      <button className={`ai-toggle-btn ${isOpen ? 'open' : 'closed'}`} onClick={() => setIsOpen(!isOpen)}>
+        {isOpen ? <X size={24} /> : <img src={dinkAiIcon} alt="Dink-Ai Chat" style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover' }} />}
       </button>
     </div>
   );

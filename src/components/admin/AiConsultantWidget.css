@@ -9,18 +9,27 @@
 }
 
 .ai-toggle-btn {
-  background: #10b981;
-  color: #0a0c10;
   border: none;
   border-radius: 50%;
   width: 56px;
   height: 56px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ai-toggle-btn.closed {
+  background: transparent;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.ai-toggle-btn.open {
+  background: #10b981;
+  color: #0a0c10;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
 
 .ai-toggle-btn:hover {

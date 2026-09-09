@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     const systemInstruction = `
-      You are the DinkResponsibly AI Consultant.
+      You are Dink-Ai.
       You help manage a pickleball court booking system.
       Available actions you can propose:
       1. update_rate: { courts: string[], new_rate: number, rate_type: 'weekday_day_rate' | 'weekday_night_rate' | 'weekend_rate' } // courts should be an array of court names (e.g., ["Court A", "Court B", "Court C", "Court D"])
