@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
 import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange } from '../../services/bookingService';
 import type { BookingRecord } from '../../services/bookingService';
-import { X, Send, Bot, CheckCircle, } from 'lucide-react';
+import { X, Send, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
 import { ActionableHeatmap } from './ActionableHeatmap';
 import dinkAiIcon from '../../assets/dink_ai_chat_icon.jpg';
