@@ -366,6 +366,9 @@
 .guest-sub {
   font-size: 0.775rem;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .court-tag {
