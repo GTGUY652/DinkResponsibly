@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, FileText, Image as ImageIcon } from 'lucide-react';
 import type { BookingRecord } from '../../services/bookingService';
 
@@ -11,9 +12,9 @@ interface ReceiptModalProps {
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, booking }) => {
   if (!isOpen || !booking) return null;
 
-  return (
+  return createPortal(
     <div onClick={onClose} style={{ zIndex: 1000, position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: '#0f172a', width: '90%', maxWidth: '600px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #334155' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: '#0f172a', width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '12px', border: '1px solid #334155' }}>
         
         {/* Header */}
         <div style={{ padding: '1rem', borderBottom: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -71,6 +72,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, onClose, boo
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

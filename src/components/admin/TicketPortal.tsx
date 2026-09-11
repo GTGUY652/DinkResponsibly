@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../services/supabase';
 import { Search, Filter, MessageSquare, Send, CheckCircle2, Clock, Mail, AlertCircle, X, ChevronDown } from 'lucide-react';
 import './TicketPortal.css';
@@ -273,7 +274,7 @@ export const TicketPortal: React.FC = () => {
                 </div>
             )}
             {/* Reply Modal */}
-            {selectedTicket && (
+            {selectedTicket && createPortal(
                 <div className="modal-backdrop">
                     <div className="modal-card">
                         <div className="modal-header">
@@ -315,7 +316,8 @@ export const TicketPortal: React.FC = () => {
                             </form>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
