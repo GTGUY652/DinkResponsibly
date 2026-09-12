@@ -306,7 +306,7 @@ export const StaffManager: React.FC = () => {
                       <div className="guest-info">
                         <span className="guest-name">{s.full_name || 'Admin User'}</span>
                         <span className="guest-sub">
-                          <Mail className="w-3 h-3 inline mr-1" />
+                          <Mail size={14} className="w-3 h-3" />
                           {s.email}
                         </span>
                       </div>

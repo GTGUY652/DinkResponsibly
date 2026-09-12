@@ -7,7 +7,7 @@ import { RateController } from './components/admin/RateController';
 import { TicketPortal } from './components/admin/TicketPortal';
 import { StaffManager } from './components/admin/StaffManager';
 import { RevenueOverview } from './components/admin/RevenueOverview';
-import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft, DollarSign } from 'lucide-react';
+import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft, PhilippinePeso } from 'lucide-react';
 import './App.css';
 import { AiConsultantWidget } from './components/admin/AiConsultantWidget';
 
@@ -29,71 +29,76 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
 
   return (
     <div className="admin-portal-wrapper">
-      <header className="admin-header">
-        <div>
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar-header">
           <button onClick={onBackToCustomer} className="admin-back-btn">
             <ArrowLeft size={16} /> Back to Public Site
           </button>
-          <h1 className="admin-title">DinkResponsibly Admin Portal</h1>
+          <h1 className="admin-title">DinkResponsibly</h1>
+          <p className="admin-subtitle">Admin Portal</p>
           <p className="admin-user-info">
-            Logged in as: <strong>{profile?.full_name || user.email}</strong> ({profile?.role || 'STAFF'})
+            Logged in as: <strong>{profile?.full_name || user.email}</strong><br/>({profile?.role || 'STAFF'})
           </p>
         </div>
-        <button onClick={signOut} className="admin-signout-btn">
-          <LogOut size={16} />
-          Sign Out
-        </button>
-      </header>
 
-      {/* Navigation Tabs */}
-      <nav className="admin-nav-bar">
-        <button
-          onClick={() => setActiveTab('REVENUE')}
-          className={`admin-tab-btn ${activeTab === 'REVENUE' ? 'active' : ''}`}
-        >
-          <DollarSign size={18} />
-          Revenue Overview
-        </button>
+        <nav className="admin-nav-bar">
+          <button
+            onClick={() => setActiveTab('REVENUE')}
+            className={`admin-tab-btn ${activeTab === 'REVENUE' ? 'active' : ''}`}
+          >
+            <PhilippinePeso size={18} />
+            Revenue Overview
+          </button>
 
-        <button
-          onClick={() => setActiveTab('CHECKIN')}
-          className={`admin-tab-btn ${activeTab === 'CHECKIN' ? 'active' : ''}`}
-        >
-          <ListCheck size={18} />
-          Check-in Log
-        </button>
+          <button
+            onClick={() => setActiveTab('CHECKIN')}
+            className={`admin-tab-btn ${activeTab === 'CHECKIN' ? 'active' : ''}`}
+          >
+            <ListCheck size={18} />
+            Check-in Log
+          </button>
 
-        <button
-          onClick={() => setActiveTab('RATES')}
-          className={`admin-tab-btn ${activeTab === 'RATES' ? 'active' : ''}`}
-        >
-          <SlidersHorizontal size={18} />
-          Court Rates & Toggles
-        </button>
+          <button
+            onClick={() => setActiveTab('RATES')}
+            className={`admin-tab-btn ${activeTab === 'RATES' ? 'active' : ''}`}
+          >
+            <SlidersHorizontal size={18} />
+            Court Rates
+          </button>
 
-        <button
-          onClick={() => setActiveTab('TICKETS')}
-          className={`admin-tab-btn ${activeTab === 'TICKETS' ? 'active' : ''}`}
-        >
-          <MessageSquareText size={18} />
-          Support Inquiries
-        </button>
+          <button
+            onClick={() => setActiveTab('TICKETS')}
+            className={`admin-tab-btn ${activeTab === 'TICKETS' ? 'active' : ''}`}
+          >
+            <MessageSquareText size={18} />
+            Support Inquiries
+          </button>
 
-        <button
-          onClick={() => setActiveTab('STAFF')}
-          className={`admin-tab-btn ${activeTab === 'STAFF' ? 'active' : ''}`}
-        >
-          <Users size={18} />
-          Staff Management
-        </button>
-      </nav>
+          <button
+            onClick={() => setActiveTab('STAFF')}
+            className={`admin-tab-btn ${activeTab === 'STAFF' ? 'active' : ''}`}
+          >
+            <Users size={18} />
+            Staff Management
+          </button>
+        </nav>
 
-      {/* Active View */}
-      {activeTab === 'REVENUE' && <RevenueOverview />}
-      {activeTab === 'CHECKIN' && <CheckInTable />}
-      {activeTab === 'RATES' && <RateController />}
-      {activeTab === 'TICKETS' && <TicketPortal />}
-      {activeTab === 'STAFF' && <StaffManager />}
+        <div className="admin-sidebar-footer">
+          <button onClick={signOut} className="admin-signout-btn">
+            <LogOut size={16} />
+            Sign Out
+          </button>
+        </div>
+      </aside>
+
+      <main className="admin-main-content">
+        {/* Active View */}
+        {activeTab === 'REVENUE' && <RevenueOverview />}
+        {activeTab === 'CHECKIN' && <CheckInTable />}
+        {activeTab === 'RATES' && <RateController />}
+        {activeTab === 'TICKETS' && <TicketPortal />}
+        {activeTab === 'STAFF' && <StaffManager />}
+      </main>
 
       <AiConsultantWidget />
     </div>

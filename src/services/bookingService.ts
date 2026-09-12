@@ -216,6 +216,7 @@ export interface RevenueOverviewData {
   pendingBalance: number;
   refundsTotal: number;
   trendChartData: TrendPoint[];
+  courtBreakdown?: { name: string; bookingsCount: number; revenue: number }[];
 }
 
 export const calculateRevenueOverviewMetrics = (
@@ -409,6 +410,20 @@ export const calculateRevenueOverviewMetrics = (
     bookingsCount: trendMap[label].count,
   }));
 
+  const courtMap: { [name: string]: { count: number; revenue: number } } = {};
+  chartBookings.forEach((b) => {
+    const cName = b.court_name || 'Unknown Court';
+    if (!courtMap[cName]) courtMap[cName] = { count: 0, revenue: 0 };
+    courtMap[cName].count += 1;
+    courtMap[cName].revenue += (b.total_price || 0);
+  });
+  
+  const courtBreakdown = Object.keys(courtMap).map(name => ({
+    name,
+    bookingsCount: courtMap[name].count,
+    revenue: courtMap[name].revenue
+  })).sort((a, b) => b.revenue - a.revenue);
+
   return {
     todayRevenue: todayRev,
     todayGrowthPct,
@@ -422,6 +437,7 @@ export const calculateRevenueOverviewMetrics = (
     pendingBalance,
     refundsTotal,
     trendChartData,
+    courtBreakdown,
   };
 };
 

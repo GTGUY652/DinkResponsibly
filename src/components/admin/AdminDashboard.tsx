@@ -4,7 +4,7 @@ import { RateController } from './RateController';
 import { TicketPortal } from './TicketPortal';
 import { StaffManager } from './StaffManager';
 import { RevenueOverview } from './RevenueOverview';
-import { ListCheck, SlidersHorizontal, MessageSquareText, Users, DollarSign } from 'lucide-react';
+import { ListCheck, SlidersHorizontal, MessageSquareText, Users, PhilippinePeso } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'REVENUE' | 'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF'>('REVENUE');
@@ -16,7 +16,7 @@ export const AdminDashboard: React.FC = () => {
           onClick={() => setActiveTab('REVENUE')}
           className={`admin-tab-btn ${activeTab === 'REVENUE' ? 'active' : ''}`}
         >
-          <DollarSign size={18} />
+          <PhilippinePeso size={18} />
           Revenue & Financials
         </button>
 

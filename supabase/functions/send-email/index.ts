@@ -1,9 +1,10 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { z } from "npm:zod";
+import nodemailer from "npm:nodemailer";
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const SENDER_EMAIL = "onboarding@resend.dev"
+const GMAIL_EMAIL = Deno.env.get('GMAIL_EMAIL')!;
+const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD')!;
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -24,25 +25,23 @@ const htmlEncode = (str: string | undefined | null) => {
     .replace(/'/g, '&#39;');
 };
 
-async function sendResendEmail(to: string, subject: string, html: string) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${RESEND_API_KEY}`,
+async function sendSmtpEmail(to: string, subject: string, html: string) {
+  // Create the nodemailer transporter
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: GMAIL_EMAIL,
+      pass: GMAIL_APP_PASSWORD,
     },
-    body: JSON.stringify({
-      from: `DinkResponsibly <${SENDER_EMAIL}>`,
-      to,
-      subject,
-      html,
-    }),
   });
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Resend API Error: ${errorText}`);
-  }
-  return await res.json();
+
+  // Send the email
+  await transporter.sendMail({
+    from: GMAIL_EMAIL,
+    to: to,
+    subject: subject,
+    html: html,
+  });
 }
 
 Deno.serve(async (req) => {
@@ -144,7 +143,7 @@ Deno.serve(async (req) => {
       `;
       
       try {
-        await sendResendEmail(booking.guest_email, `Booking Confirmed: ${booking.booking_code}`, htmlBody);
+        await sendSmtpEmail(booking.guest_email, `Booking Confirmed: ${booking.booking_code}`, htmlBody);
         
         await supabase.from("email_logs").insert({
           recipient_email: booking.guest_email,
@@ -249,7 +248,7 @@ Deno.serve(async (req) => {
       `;
       
       try {
-        await sendResendEmail(ticket.guest_email, `Update on your Ticket: ${ticket.ticket_reference}`, htmlBody);
+        await sendSmtpEmail(ticket.guest_email, `Update on your Ticket: ${ticket.ticket_reference}`, htmlBody);
         
         await supabase.from("support_tickets").update({
           status: "RESOLVED",
