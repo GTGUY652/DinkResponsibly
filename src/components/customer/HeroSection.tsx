@@ -1,8 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, ShieldCheck, Zap } from 'lucide-react';
 import './HeroSection.css';
+import { sanityClient } from '../../lib/sanity';
 
 export const HeroSection: React.FC = () => {
+  const [heroData, setHeroData] = useState({
+    description: "Experience high energy pickleball matches on 4 pro-grade courts. Instant 1-hour slot reservations, dynamic rates from ₱400/hr, and effortless guest checkout.",
+    imageUrl: "/hero_court.jpg",
+    caption: "4 Premium Outdoor & Indoor Pickleball Courts • Manila"
+  });
+
+  useEffect(() => {
+    sanityClient.fetch(`*[_type == "hero"][0]{
+      description,
+      "imageUrl": image.asset->url,
+      caption
+    }`).then((data) => {
+      if (data) {
+        setHeroData(prev => ({
+          description: data.description || prev.description,
+          imageUrl: data.imageUrl || prev.imageUrl,
+          caption: data.caption || prev.caption
+        }));
+      }
+    }).catch(console.error);
+  }, []);
+
   const scrollToAvailability = () => {
     document.getElementById('availability')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -18,7 +41,7 @@ export const HeroSection: React.FC = () => {
           </h1>
 
           <p className="hero-description">
-            Experience high energy pickleball matches on 4 pro-grade courts. Instant 1-hour slot reservations, dynamic rates from ₱400/hr, and effortless guest checkout.
+            {heroData.description}
           </p>
 
           <div className="hero-cta-group">
@@ -50,7 +73,7 @@ export const HeroSection: React.FC = () => {
 
           <div className="card-image-container">
             <img 
-              src="/hero_court.jpg" 
+              src={heroData.imageUrl} 
               alt="DinkResponsibly Modern Luxury Pickleball Court" 
               className="hero-court-img"
             />
@@ -58,7 +81,7 @@ export const HeroSection: React.FC = () => {
             <div className="card-caption">
               <div className="caption-tag">PRO VENUE</div>
               <h3>DinkResponsibly Courts</h3>
-              <p>4 Premium Outdoor & Indoor Pickleball Courts • Manila</p>
+              <p>{heroData.caption}</p>
             </div>
           </div>
         </div>
