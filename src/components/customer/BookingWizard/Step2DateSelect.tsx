@@ -6,6 +6,7 @@ interface Step2DateSelectProps {
   currentYear: number;
   currentMonth: number; // 0-indexed
   selectedDay: number;
+  closedDays?: number[];
   onChangeMonth: (year: number, month: number) => void;
   onSelectDay: (day: number) => void;
 }
@@ -14,6 +15,7 @@ export const Step2DateSelect: React.FC<Step2DateSelectProps> = ({
   currentYear,
   currentMonth,
   selectedDay,
+  closedDays = [],
   onChangeMonth,
   onSelectDay,
 }) => {
@@ -111,19 +113,21 @@ export const Step2DateSelect: React.FC<Step2DateSelectProps> = ({
             const isPast = cellDate < today;
             const isToday = cellDate.getTime() === today.getTime();
             const isSelected = selectedDay === day;
+            const isClosed = closedDays.includes(day);
 
             return (
               <button
                 key={day}
                 type="button"
-                disabled={isPast}
+                disabled={isPast || isClosed}
                 onClick={() => onSelectDay(day)}
-                className={`cal-day-cell ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}`}
+                className={`cal-day-cell ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${isPast ? 'past' : ''} ${isClosed ? 'closed' : ''}`}
                 aria-label={`${monthNames[currentMonth]} ${day}, ${currentYear}`}
                 aria-pressed={isSelected}
               >
                 <span className="day-number">{day}</span>
                 {isToday && <span className="today-dot" title="Today" />}
+                {isClosed && <span className="closed-slash" title="Closed" />}
               </button>
             );
           })}

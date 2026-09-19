@@ -129,6 +129,25 @@
   background: transparent;
 }
 
+.cal-day-cell.closed {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.2);
+  color: var(--text-secondary);
+}
+
+.closed-slash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 2px;
+  background-color: #ef4444;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  opacity: 0.8;
+}
+
 .selected-date-banner {
   margin-top: 1.25rem;
   padding: 0.9rem 1.1rem;
