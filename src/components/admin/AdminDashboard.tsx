@@ -4,10 +4,10 @@ import { RateController } from './RateController';
 import { TicketPortal } from './TicketPortal';
 import { StaffManager } from './StaffManager';
 import { RevenueOverview } from './RevenueOverview';
-import { ListCheck, SlidersHorizontal, MessageSquareText, Users, PhilippinePeso } from 'lucide-react';
+import { ListCheck, SlidersHorizontal, MessageSquareText, Users, PhilippinePeso, Wrench } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'REVENUE' | 'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF'>('REVENUE');
+  const [activeTab, setActiveTab] = useState<'REVENUE' | 'CHECKIN' | 'MAINTENANCE' | 'RATES' | 'TICKETS' | 'STAFF'>('REVENUE');
 
   return (
     <div className="admin-dashboard-container">
@@ -26,6 +26,14 @@ export const AdminDashboard: React.FC = () => {
         >
           <ListCheck size={18} />
           Check-in Log
+        </button>
+
+        <button
+          onClick={() => setActiveTab('MAINTENANCE')}
+          className={`admin-tab-btn ${activeTab === 'MAINTENANCE' ? 'active' : ''}`}
+        >
+          <Wrench size={18} />
+          Maintenance Log
         </button>
 
         <button
@@ -55,7 +63,8 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Active View */}
       {activeTab === 'REVENUE' && <RevenueOverview />}
-      {activeTab === 'CHECKIN' && <CheckInTable />}
+      {activeTab === 'CHECKIN' && <CheckInTable type="regular" />}
+      {activeTab === 'MAINTENANCE' && <CheckInTable type="maintenance" />}
       {activeTab === 'RATES' && <RateController />}
       {activeTab === 'TICKETS' && <TicketPortal />}
       {activeTab === 'STAFF' && <StaffManager />}

@@ -6,7 +6,11 @@ import { Search, Calendar, Filter, RefreshCw, Clock, Trash2, FileText, ChevronDo
 import { ReceiptModal } from './ReceiptModal';
 import './CheckInTable.css';
 
-export const CheckInTable: React.FC = () => {
+export interface CheckInTableProps {
+  type?: 'regular' | 'maintenance';
+}
+
+export const CheckInTable: React.FC<CheckInTableProps> = ({ type = 'regular' }) => {
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
   const [courtsList, setCourtsList] = useState<CourtRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,6 +136,10 @@ export const CheckInTable: React.FC = () => {
   };
 
   const filteredBookings = bookings.filter((item) => {
+    const isMaintenance = item.booking_code && item.booking_code.includes('MAINT');
+    if (type === 'regular' && isMaintenance) return false;
+    if (type === 'maintenance' && !isMaintenance) return false;
+
     const query = searchQuery.toLowerCase();
     const courtName = getCourtDisplayName(item);
     const matchesSearch =
@@ -292,9 +300,13 @@ export const CheckInTable: React.FC = () => {
 
       <div className="table-container">
         {loading && bookings.length === 0 ? (
-          <div className="table-empty">Loading reservations...</div>
+          <div className="table-empty">Loading records...</div>
         ) : filteredBookings.length === 0 ? (
-          <div className="table-empty">No active court reservations found matching your search.</div>
+          <div className="table-empty">
+            {type === 'regular' 
+              ? 'No active court reservations found matching your search.' 
+              : 'No maintenance blocks found matching your search.'}
+          </div>
         ) : (
           <table className="custom-table">
             <thead>

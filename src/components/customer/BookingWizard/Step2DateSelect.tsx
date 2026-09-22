@@ -2,10 +2,14 @@ import React from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react';
 import './Step2DateSelect.css';
 
+import type { CourtRecord } from '../../../services/bookingService';
+
 interface Step2DateSelectProps {
   currentYear: number;
   currentMonth: number; // 0-indexed
   selectedDay: number;
+  closedDays?: number[];
+  activeCourt?: CourtRecord;
   onChangeMonth: (year: number, month: number) => void;
   onSelectDay: (day: number) => void;
 }
@@ -14,6 +18,8 @@ export const Step2DateSelect: React.FC<Step2DateSelectProps> = ({
   currentYear,
   currentMonth,
   selectedDay,
+  closedDays = [],
+  activeCourt,
   onChangeMonth,
   onSelectDay,
 }) => {
@@ -88,17 +94,17 @@ export const Step2DateSelect: React.FC<Step2DateSelectProps> = ({
           </button>
         </div>
 
-        <div className="calendar-weekdays-row">
-          <span>Sun</span>
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-          <span>Fri</span>
-          <span>Sat</span>
+        <div className="calendar-weekdays-row notranslate">
+          <div>Sun</div>
+          <div>Mon</div>
+          <div>Tue</div>
+          <div>Wed</div>
+          <div>Thu</div>
+          <div>Fri</div>
+          <div>Sat</div>
         </div>
 
-        <div className="calendar-days-matrix">
+        <div className="calendar-days-matrix notranslate">
           {/* Blank offset cells for alignment */}
           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
             <div key={`offset-${i}`} className="cal-day-cell empty" />
@@ -111,19 +117,21 @@ export const Step2DateSelect: React.FC<Step2DateSelectProps> = ({
             const isPast = cellDate < today;
             const isToday = cellDate.getTime() === today.getTime();
             const isSelected = selectedDay === day;
+            const isClosed = closedDays.includes(day);
 
             return (
               <button
                 key={day}
                 type="button"
-                disabled={isPast}
+                disabled={isPast || isClosed}
                 onClick={() => onSelectDay(day)}
-                className={`cal-day-cell ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}`}
+                className={`cal-day-cell ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''} ${isPast ? 'past' : ''} ${isClosed ? 'closed' : ''}`}
                 aria-label={`${monthNames[currentMonth]} ${day}, ${currentYear}`}
                 aria-pressed={isSelected}
               >
                 <span className="day-number">{day}</span>
                 {isToday && <span className="today-dot" title="Today" />}
+                {isClosed && <span className="closed-slash" title="Closed" />}
               </button>
             );
           })}
@@ -135,7 +143,9 @@ export const Step2DateSelect: React.FC<Step2DateSelectProps> = ({
             <span>Selected Date: <strong>{monthShort[currentMonth]} {selectedDay}, {currentYear}</strong></span>
           </div>
           <span className="rate-hint-tag">
-            {isWeekend ? '🎉 Weekend Flat Rate Applies (₱500/hr)' : '⚡ Standard Weekday Pricing (₱400–₱500/hr)'}
+            {isWeekend 
+              ? `🎉 Weekend Flat Rate Applies (₱${activeCourt?.weekend_rate ?? 500}/hr)` 
+              : `⚡ Standard Weekday Pricing (₱${activeCourt?.weekday_day_rate ?? 400}–₱${activeCourt?.weekday_night_rate ?? 500}/hr)`}
           </span>
         </div>
       </div>

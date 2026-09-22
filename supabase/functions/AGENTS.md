@@ -2,7 +2,7 @@
 
 ## Overview
 
-Supabase Serverless Edge Functions running on the Deno TypeScript runtime. Handles secure backend operations including transactional email dispatch via Resend and Gemini AI queries.
+Supabase Serverless Edge Functions running on the Deno TypeScript runtime. Handles secure backend operations including transactional email dispatch via Gmail SMTP and Gemini AI queries.
 
 ## Edge Function Development Reminder
 
@@ -10,7 +10,7 @@ Supabase Serverless Edge Functions running on the Deno TypeScript runtime. Handl
 > **When to use Edge Functions vs Supabase Client SDK:**
 > - **Direct Database & Storage Operations**: Handled directly in `src/services/bookingService.ts` using `@supabase/supabase-js` for schedule checks, booking creation, receipt screenshot uploads (`payment-receipts` bucket), and admin check-in updates.
 > - **Edge Functions (`supabase/functions/`)**: Reserved for features involving secret keys or external services:
->   1. `send-email`: Dispatching transactional email receipts via Resend API (`RESEND_API_KEY`).
+>   1. `send-email`: Dispatching transactional email receipts via Gmail SMTP (`GMAIL_EMAIL`, `GMAIL_APP_PASSWORD`).
 >   2. `gemini-advisor`: Running Google Gemini AI queries for sales reports and chatbot (`GEMINI_API_KEY`).
 
 ## Key files
@@ -18,7 +18,7 @@ Supabase Serverless Edge Functions running on the Deno TypeScript runtime. Handl
 | File | Owns |
 |---|---|
 | `_shared/cors.ts` | Cross Origin Resource Sharing headers for API endpoints |
-| `send-email/index.ts` | Email receipt dispatch using Resend API |
+| `send-email/index.ts` | Email receipt dispatch using Gmail SMTP |
 | `gemini-advisor/index.ts` | Google Gemini API integration for sales reports and chatbot queries |
 
 ## Commands
@@ -40,5 +40,5 @@ supabase functions deploy <function-name>
 ## Gotchas
 
 - Deno imports require explicit URL or file extensions.
-- Secret environment variables (`RESEND_API_KEY`, `GEMINI_API_KEY`) must be set via Supabase secrets CLI or dashboard. (Note: The project no longer uses PayMongo.)
+- Secret environment variables (`GMAIL_EMAIL`, `GMAIL_APP_PASSWORD`, `GEMINI_API_KEY`) must be set via Supabase secrets CLI or dashboard. (Note: The project no longer uses PayMongo.)
 - Remember to properly handle JSON parsing errors defensively to prevent edge function crashes.

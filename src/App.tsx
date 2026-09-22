@@ -7,13 +7,13 @@ import { RateController } from './components/admin/RateController';
 import { TicketPortal } from './components/admin/TicketPortal';
 import { StaffManager } from './components/admin/StaffManager';
 import { RevenueOverview } from './components/admin/RevenueOverview';
-import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft, PhilippinePeso } from 'lucide-react';
+import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft, PhilippinePeso, Wrench } from 'lucide-react';
 import './App.css';
 import { AiConsultantWidget } from './components/admin/AiConsultantWidget';
 
 const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBackToCustomer }) => {
   const { user, profile, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'REVENUE' | 'CHECKIN' | 'RATES' | 'TICKETS' | 'STAFF'>('REVENUE');
+  const [activeTab, setActiveTab] = useState<'REVENUE' | 'CHECKIN' | 'MAINTENANCE' | 'RATES' | 'TICKETS' | 'STAFF'>('REVENUE');
 
   if (loading) {
     return (
@@ -59,6 +59,14 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
           </button>
 
           <button
+            onClick={() => setActiveTab('MAINTENANCE')}
+            className={`admin-tab-btn ${activeTab === 'MAINTENANCE' ? 'active' : ''}`}
+          >
+            <Wrench size={18} />
+            Maintenance Log
+          </button>
+
+          <button
             onClick={() => setActiveTab('RATES')}
             className={`admin-tab-btn ${activeTab === 'RATES' ? 'active' : ''}`}
           >
@@ -94,7 +102,8 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
       <main className="admin-main-content">
         {/* Active View */}
         {activeTab === 'REVENUE' && <RevenueOverview />}
-        {activeTab === 'CHECKIN' && <CheckInTable />}
+        {activeTab === 'CHECKIN' && <CheckInTable type="regular" />}
+        {activeTab === 'MAINTENANCE' && <CheckInTable type="maintenance" />}
         {activeTab === 'RATES' && <RateController />}
         {activeTab === 'TICKETS' && <TicketPortal />}
         {activeTab === 'STAFF' && <StaffManager />}

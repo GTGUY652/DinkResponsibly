@@ -7,7 +7,7 @@ import { Step3SlotSelect, type DiscreteSlotItem } from './Step3SlotSelect';
 import { Step4GuestDetails, type GuestDetailsState } from './Step4GuestDetails';
 import { Step5PaymentReceipt, type PaymentSubmissionData } from './Step5PaymentReceipt';
 import { BookingSuccessView } from './BookingSuccessView';
-import { fetchBookedSlots, createBooking, generateBookingCode, fetchCourts } from '../../../services/bookingService';
+import { fetchBookedSlots, createBooking, generateBookingCode, fetchCourts,} from '../../../services/bookingService';
 import type { CourtRecord } from '../../../services/bookingService';
 import { compressImage } from '../../../utils/imageCompression';
 import { uploadPaymentReceipt } from '../../../services/bookingService';
@@ -33,6 +33,7 @@ export const BookingWizard: React.FC = () => {
   const [currentYear, setCurrentYear] = useState<number>(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<number>(today.getDate());
+  const [closedDays, setClosedDays] = useState<number[]>([]);
 
   // Step 3: Slots Selection
   const [bookedHours, setBookedHours] = useState<number[]>([]);
@@ -108,6 +109,46 @@ export const BookingWizard: React.FC = () => {
     // Clear slots selection when court or date changes
     setSelectedHours([]);
   }, [selectedCourt, formattedDateStr, loadAvailability]);
+
+  // Load Month Availability for Calendar Indicators
+  const loadClosedDaysForMonth = useCallback(async () => {
+    if (!activeCourtRecord?.id) return;
+
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const idToUse = activeCourtRecord.id;
+    
+    // Since public users cannot read the bookings table directly due to RLS,
+    // we use the get_booked_slots RPC (via fetchBookedSlots) which uses SECURITY DEFINER.
+    const datePromises = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      datePromises.push(
+        fetchBookedSlots(idToUse, dateStr).then(slots => ({ day, slots }))
+      );
+    }
+    
+    try {
+      const results = await Promise.all(datePromises);
+      const newClosedDays: number[] = [];
+      
+      results.forEach(({ day, slots }) => {
+        // Calculate total duration for the day
+        const totalHours = slots.reduce((acc, slot) => acc + (slot.end_hour - slot.start_hour), 0);
+        // 17 hours is a full operating day (6 AM - 11 PM)
+        if (totalHours >= 17) {
+          newClosedDays.push(day);
+        }
+      });
+
+      setClosedDays(newClosedDays);
+    } catch (err) {
+      console.error("Error loading closed days:", err);
+    }
+  }, [currentYear, currentMonth, activeCourtRecord?.id, selectedCourt]);
+
+  useEffect(() => {
+    void loadClosedDaysForMonth();
+  }, [loadClosedDaysForMonth]);
 
   // Construct discrete 1-hour slots (6:00 AM to 11:00 PM)
   const formatHourString = (hour: number): string => {
@@ -368,6 +409,8 @@ export const BookingWizard: React.FC = () => {
                 currentYear={currentYear}
                 currentMonth={currentMonth}
                 selectedDay={selectedDay}
+                closedDays={closedDays}
+                activeCourt={activeCourtRecord}
                 onChangeMonth={(yr, mo) => {
                   setCurrentYear(yr);
                   setCurrentMonth(mo);
