@@ -42,9 +42,7 @@ export const CustomerNavbar: React.FC = () => {
       <div className="navbar-container">
         {/* Brand Logo & Mark */}
         <div className="logo-container" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <div className="logo-badge-icon">
-            <Activity size={18} className="logo-icon-svg" />
-          </div>
+          <img src="/favicon.svg" alt="DinkResponsibly" className="navbar-brand-icon" />
           <div className="logo-placeholder">
             <span className="logo-text">Dink</span>
             <span className="logo-highlight">Responsibly</span>
@@ -103,9 +101,7 @@ export const CustomerNavbar: React.FC = () => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 >
-                  <div className="logo-badge-icon">
-                    <Activity size={18} className="logo-icon-svg" />
-                  </div>
+                  <img src="/favicon.svg" alt="DinkResponsibly" className="navbar-brand-icon" />
                   <div className="logo-placeholder">
                     <span className="logo-text">Dink</span>
                     <span className="logo-highlight">Responsibly</span>
