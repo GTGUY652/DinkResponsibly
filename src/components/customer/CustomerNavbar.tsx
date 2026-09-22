@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, Phone, Info, Activity, Menu, X } from 'lucide-react';
+import { Calendar, Phone, Info, Menu, X } from 'lucide-react';
 import './CustomerNavbar.css';
 
 export const CustomerNavbar: React.FC = () => {
