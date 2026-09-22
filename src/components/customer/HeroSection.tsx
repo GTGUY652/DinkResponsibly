@@ -7,7 +7,7 @@ export const HeroSection: React.FC = () => {
   const [heroData, setHeroData] = useState({
     description: "Experience high energy pickleball matches on 4 pro-grade courts. Instant 1-hour slot reservations, dynamic rates from ₱400/hr, and effortless guest checkout.",
     imageUrl: "/hero_court.jpg",
-    caption: "4 Premium Outdoor & Indoor Pickleball Courts • Manila"
+    caption: "4 Premium Outdoor & Indoor Pickleball Courts • Cebu"
   });
 
   useEffect(() => {
