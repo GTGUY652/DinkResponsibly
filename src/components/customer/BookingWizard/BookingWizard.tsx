@@ -7,7 +7,7 @@ import { Step3SlotSelect, type DiscreteSlotItem } from './Step3SlotSelect';
 import { Step4GuestDetails, type GuestDetailsState } from './Step4GuestDetails';
 import { Step5PaymentReceipt, type PaymentSubmissionData } from './Step5PaymentReceipt';
 import { BookingSuccessView } from './BookingSuccessView';
-import { fetchBookedSlots, createBooking, generateBookingCode, fetchCourts, fetchBookingsForDateRange } from '../../../services/bookingService';
+import { fetchBookedSlots, createBooking, generateBookingCode, fetchCourts,} from '../../../services/bookingService';
 import type { CourtRecord } from '../../../services/bookingService';
 import { compressImage } from '../../../utils/imageCompression';
 import { uploadPaymentReceipt } from '../../../services/bookingService';
