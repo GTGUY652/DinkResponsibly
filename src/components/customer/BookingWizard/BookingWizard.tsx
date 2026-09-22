@@ -115,29 +115,35 @@ export const BookingWizard: React.FC = () => {
     if (!activeCourtRecord?.id) return;
 
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const startStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-01`;
-    const endStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${daysInMonth.toString().padStart(2, '0')}`;
     const idToUse = activeCourtRecord.id;
     
-    const monthBookings = await fetchBookingsForDateRange(startStr, endStr, [idToUse]);
+    // Since public users cannot read the bookings table directly due to RLS,
+    // we use the get_booked_slots RPC (via fetchBookedSlots) which uses SECURITY DEFINER.
+    const datePromises = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      datePromises.push(
+        fetchBookedSlots(idToUse, dateStr).then(slots => ({ day, slots }))
+      );
+    }
     
-    const dayMap: Record<string, number> = {};
-    monthBookings.forEach((b) => {
-      if (!dayMap[b.booking_date]) {
-        dayMap[b.booking_date] = 0;
-      }
-      dayMap[b.booking_date] += b.duration_hours || 0;
-    });
+    try {
+      const results = await Promise.all(datePromises);
+      const newClosedDays: number[] = [];
+      
+      results.forEach(({ day, slots }) => {
+        // Calculate total duration for the day
+        const totalHours = slots.reduce((acc, slot) => acc + (slot.end_hour - slot.start_hour), 0);
+        // 17 hours is a full operating day (6 AM - 11 PM)
+        if (totalHours >= 17) {
+          newClosedDays.push(day);
+        }
+      });
 
-    const newClosedDays: number[] = [];
-    Object.keys(dayMap).forEach((dateStr) => {
-      // 17 hours is a full operating day (6 AM - 11 PM)
-      if (dayMap[dateStr] >= 17) {
-        const day = parseInt(dateStr.split('-')[2], 10);
-        newClosedDays.push(day);
-      }
-    });
-    setClosedDays(newClosedDays);
+      setClosedDays(newClosedDays);
+    } catch (err) {
+      console.error("Error loading closed days:", err);
+    }
   }, [currentYear, currentMonth, activeCourtRecord?.id, selectedCourt]);
 
   useEffect(() => {
@@ -404,6 +410,7 @@ export const BookingWizard: React.FC = () => {
                 currentMonth={currentMonth}
                 selectedDay={selectedDay}
                 closedDays={closedDays}
+                activeCourt={activeCourtRecord}
                 onChangeMonth={(yr, mo) => {
                   setCurrentYear(yr);
                   setCurrentMonth(mo);
