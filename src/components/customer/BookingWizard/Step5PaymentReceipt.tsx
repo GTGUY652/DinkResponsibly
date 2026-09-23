@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { QrCode, Image as ImageIcon, CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { Image as ImageIcon, CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
+import qrCodeImage from '../../../assets/qr_code.jpg';
 import './Step5PaymentReceipt.css';
 
 export interface PaymentSubmissionData {
@@ -95,11 +96,8 @@ export const Step5PaymentReceipt: React.FC<Step5PaymentReceiptProps> = ({
             </div>
           </div>
 
-          <div className="qr-code-box">
-            <div className="qr-white-card">
-              <QrCode size={130} color="#040c1a" />
-              <span className="qr-caption">DinkResponsibly Official GCash</span>
-            </div>
+          <div className="qr-code-box" style={{ padding: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', background: 'transparent', boxShadow: 'none' }}>
+            <img src={qrCodeImage} alt="Official QR Code" style={{ width: '100%', maxWidth: '240px', height: 'auto', display: 'block', borderRadius: '12px' }} />
           </div>
 
           <div className="qr-payable-banner">
