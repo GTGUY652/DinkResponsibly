@@ -10,6 +10,7 @@ import { RevenueOverview } from './components/admin/RevenueOverview';
 import { LogOut, ListCheck, SlidersHorizontal, MessageSquareText, Users, ArrowLeft, PhilippinePeso, Wrench } from 'lucide-react';
 import './App.css';
 import { AiConsultantWidget } from './components/admin/AiConsultantWidget';
+import { LoadingScreen } from './components/common/LoadingScreen';
 
 const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBackToCustomer }) => {
   const { user, profile, loading, signOut } = useAuth();
@@ -115,6 +116,7 @@ const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBack
 };
 
 export default function App() {
+  const [isLoadingScreen, setIsLoadingScreen] = useState(true);
   const [isAdminView, setIsAdminView] = useState<boolean>(() => {
     const queryParams = new URLSearchParams(window.location.search);
     return queryParams.get('admin') === 'true' || window.location.hash === '#admin';
@@ -142,6 +144,10 @@ export default function App() {
     window.location.hash = '';
     setIsAdminView(false);
   };
+
+  if (isLoadingScreen) {
+    return <LoadingScreen onComplete={() => setIsLoadingScreen(false)} />;
+  }
 
   if (isAdminView) {
     return (
