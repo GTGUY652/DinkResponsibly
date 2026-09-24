@@ -1,69 +1,71 @@
 import React from 'react';
-import { Target, Users, Sparkles, ShieldCheck } from 'lucide-react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCards, Autoplay } from 'swiper/modules';
-
-import 'swiper/css';
-import 'swiper/css/effect-cards';
+import { Target, Users, Sparkles, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import './AboutUsSection.css';
 
 const ABOUT_CARDS = [
   {
-    icon: <Target className="about-icon text-accent" size={32} />,
+    icon: <Target size={20} />,
     title: 'Our Mission',
-    description: 'We provide accessible, top tier pickleball courts for players of all skill levels, from beginners to tournament competitors.'
+    description: 'Accessible, top-tier courts for every level — from first-timers to tournament competitors.',
+    meta: 'Inclusive • Competitive',
+    featured: true,
   },
   {
-    icon: <Users className="about-icon text-accent" size={32} />,
+    icon: <Users size={20} />,
     title: 'Vibrant Community',
-    description: 'DinkResponsibly connects local enthusiasts through regular games, casual practice matches, and social gatherings.'
+    description: 'Regular games, practice matches and social gatherings that connect Cebu players.',
+    meta: 'Weekly meetups',
   },
   {
-    icon: <Sparkles className="about-icon text-accent" size={32} />,
+    icon: <Sparkles size={20} />,
     title: 'Modern Facilities',
-    description: 'Enjoy anti slip surfaces, professional net setups, high intensity LED lighting, and relaxing lounge areas.'
+    description: 'Anti-slip surfaces, pro nets, high-intensity LEDs and a relaxed lounge.',
+    meta: 'Open 6AM — 2AM',
   },
   {
-    icon: <ShieldCheck className="about-icon text-accent" size={32} />,
+    icon: <ShieldCheck size={20} />,
     title: 'Direct Booking',
-    description: 'No customer account registration required. Book instantly with guest checkout and instant confirmation.'
+    description: 'No account needed. Guest checkout with instant confirmation.',
+    meta: 'Zero signup',
   }
 ];
 
 export const AboutUsSection: React.FC = () => {
   return (
-    <section id="about" className="section-container" style={{ overflow: 'hidden' }}>
-      <div className="about-split-layout">
-        <div className="about-text-content">
-          <h2 className="section-title" style={{ textAlign: 'left', margin: '0 0 1.25rem 0' }}>
-            About DinkResponsibly
-          </h2>
-          <p className="section-subtitle" style={{ textAlign: 'left', margin: '0', maxWidth: '100%' }}>
-            Dedicated to delivering high quality pickleball experiences in a vibrant community environment. Swipe through our cards to see what we offer!
-          </p>
-        </div>
+    <section id="about" className="section-container">
+      <div className="about-section-header">
+        <div className="about-eyebrow">Why DinkResponsibly</div>
+        <h2 className="about-title">Built for players, not paperwork.</h2>
+        <p className="about-subtitle">
+          High-quality pickleball in a welcoming, community-driven environment — four pro-grade indoor courts, ready when you are.
+        </p>
+      </div>
 
-        <div className="about-swiper-container">
-          <Swiper
-            effect={'cards'}
-            grabCursor={true}
-            modules={[EffectCards, Autoplay]}
-            autoplay={{ delay: 3500, disableOnInteraction: false }}
-            className="about-swiper"
-          >
-            {ABOUT_CARDS.map((card, idx) => (
-              <SwiperSlide key={idx} className="about-card-slide">
-                <div className="about-card">
-                  <div className="about-card-inner">
-                    {card.icon}
-                    <h3>{card.title}</h3>
-                    <p>{card.description}</p>
+      <div className="about-bento-grid">
+        {ABOUT_CARDS.map((card, idx) => {
+          const isFullWidth = idx === ABOUT_CARDS.length - 1 && !card.featured;
+          return (
+            <article key={idx} className={`about-bento-card ${card.featured ? 'featured' : ''} ${isFullWidth ? 'full-width' : ''}`}>
+              {card.featured && <div className="featured-badge">Featured • Since 2024</div>}
+              <div className={isFullWidth ? 'full-width-main' : undefined}>
+                <div className="about-icon-wrap">{card.icon}</div>
+                <div>
+                  <h3>{card.title}</h3>
+                  <p>{card.description}</p>
+                  <div className="about-card-meta">
+                    <span>{card.meta}</span>
+                    <ArrowUpRight size={12} />
                   </div>
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
+              </div>
+              {card.featured && (
+                <div className="featured-visual" aria-hidden>
+                  <img src="/hero_court.jpg" alt="" />
+                </div>
+              )}
+            </article>
+          );
+        })}
       </div>
     </section>
   );

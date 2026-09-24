@@ -137,7 +137,11 @@
   border: 2px dashed #334155;
   background: #0b1120;
   border-radius: 0.75rem;
-  padding: 1.25rem;
+  padding: 1.5rem 1.25rem;
+  min-height: 168px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   transition: all 0.2s ease;
 }
@@ -152,14 +156,20 @@
 
 .dropzone-label {
   cursor: pointer;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .dropzone-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  margin: 0 auto;
 }
 
 .dropzone-text {
