@@ -65,12 +65,16 @@ export const HeroSection: React.FC = () => {
               <Zap size={16} className="trust-icon" />
               <span>Instant Confirmation</span>
             </div>
+            <div className="trust-item">
+              <ShieldCheck size={16} className="trust-icon" />
+              <span>₱400/hr from 6AM</span>
+            </div>
           </div>
         </div>
 
         {/* Right Side: Visual Card Layout with Generated Court Media */}
         <div className="hero-visual-card">
-
+          <div className="hero-ghost-text" aria-hidden>COURT 04</div>
           <div className="card-image-container">
             <img 
               src={heroData.imageUrl} 
@@ -79,7 +83,7 @@ export const HeroSection: React.FC = () => {
             />
             <div className="card-image-overlay" />
             <div className="card-caption">
-              <div className="caption-tag">PRO VENUE</div>
+              <div className="caption-tag">Pro Venue • Indoor</div>
               <h3>DinkResponsibly Courts</h3>
               <p>{heroData.caption}</p>
             </div>

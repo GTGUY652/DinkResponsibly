@@ -370,13 +370,15 @@ export const CheckInTable: React.FC<CheckInTableProps> = ({ type = 'regular' }) 
                       >
                         <FileText size={15} /> Receipt
                       </button>
-                      <button
-                        onClick={() => handleDelete(b.id!)}
-                        className="delete-action-btn"
-                        title="Delete Reservation"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {b.status !== 'APPROVED' && (
+                        <button
+                          onClick={() => handleDelete(b.id!)}
+                          className="delete-action-btn"
+                          title="Delete Reservation"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

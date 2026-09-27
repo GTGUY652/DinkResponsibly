@@ -60,7 +60,7 @@ export const ContactSection: React.FC = () => {
   
             <div className="info-list">
               <div className="info-item">
-                <Phone className="text-accent" size={20} />
+                <Phone className="text-accent" size={14} />
                 <div>
                   <span className="info-label">Phone / Mobile</span>
                   <span className="info-val">+63 917 123 4567</span>
@@ -68,7 +68,7 @@ export const ContactSection: React.FC = () => {
               </div>
   
               <div className="info-item">
-                <Mail className="text-accent" size={20} />
+                <Mail className="text-accent" size={14} />
                 <div>
                   <span className="info-label">Email Address</span>
                   <span className="info-val">owner@dinkresponsibly.ph</span>
@@ -76,7 +76,7 @@ export const ContactSection: React.FC = () => {
               </div>
   
               <div className="info-item">
-                <Globe className="text-accent" size={20} />
+                <Globe className="text-accent" size={14} />
                 <div>
                   <span className="info-label">Facebook Page</span>
                   <a href="https://facebook.com" target="_blank" rel="noreferrer" className="info-link">

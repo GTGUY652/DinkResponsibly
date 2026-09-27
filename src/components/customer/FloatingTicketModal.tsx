@@ -48,13 +48,15 @@ export const FloatingTicketModal: React.FC = () => {
 
   return (
     <>
-      {/* Round Floating Action Button */}
+      {/* Floating Action Button — right side, expands on hover */}
       <button
         onClick={() => setIsOpen(true)}
         className="floating-ticket-btn"
         title="Send a Support Ticket to Owner"
+        aria-label="Open support ticket"
       >
-        <MessageSquareText size={24} />
+        <span className="fab-label">Need help?</span>
+        <span className="fab-icon"><MessageSquareText size={18} /></span>
       </button>
 
       {/* Slide-Up Popup Modal */}
