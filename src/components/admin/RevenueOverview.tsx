@@ -64,9 +64,13 @@ export const RevenueOverview: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const refDate = dateRange === 'this_month' ? new Date(`${selectedMonth}-01T00:00:00`) : new Date();
+      // KPIs (Today/Week/YTD) must stay anchored to real today.
+      // Only the month card + trend chart follow the month picker.
+      // Previously refDate was the 1st of the selected month, so the
+      // rolling 7-day week leaked into the prior month.
+      const todayRef = new Date();
       const [resData, courtList] = await Promise.all([
-        fetchRevenueOverviewData(dateRange, courtFilter, derivedGranularity, refDate),
+        fetchRevenueOverviewData(dateRange, courtFilter, derivedGranularity, todayRef, selectedMonth),
         fetchCourts(),
       ]);
       setData(resData);
