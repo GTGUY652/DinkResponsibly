@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Mail, Phone, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { fetchVenueRules, FALLBACK_VENUE_RULES, type VenueRule } from '../../../services/venueRulesService';
 import './Step4GuestDetails.css';
 
 export interface GuestDetailsState {
@@ -28,6 +29,18 @@ export const Step4GuestDetails: React.FC<Step4GuestDetailsProps> = ({
   durationHours,
   totalPrice,
 }) => {
+  const [rules, setRules] = useState<VenueRule[]>(FALLBACK_VENUE_RULES);
+
+  useEffect(() => {
+    let isLive = true;
+    fetchVenueRules().then((fetched) => {
+      if (isLive) setRules(fetched);
+    });
+    return () => {
+      isLive = false;
+    };
+  }, []);
+
   return (
     <div className="step-guest-details-container">
       <div className="step-heading-group">
@@ -135,15 +148,11 @@ export const Step4GuestDetails: React.FC<Step4GuestDetailsProps> = ({
               <h4>Strict Venue Rules</h4>
             </div>
             <ul className="rules-bullet-list">
-              <li>
-                <strong>Strict 1-Hour Slots:</strong> Court access ends promptly at the top of the hour to accommodate incoming players.
-              </li>
-              <li>
-                <strong>No-Refund Policy:</strong> Reservations are locked and non-refundable once confirmed.
-              </li>
-              <li>
-                <strong>Proper Footwear:</strong> Non-marking athletic court shoes are required on all courts.
-              </li>
+              {rules.map((rule) => (
+                <li key={rule._id}>
+                  <strong>{rule.title}</strong> {rule.description}
+                </li>
+              ))}
             </ul>
           </div>
         </div>

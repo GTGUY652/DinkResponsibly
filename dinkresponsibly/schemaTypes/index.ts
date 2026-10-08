@@ -22,4 +22,39 @@ export const heroType = {
   ]
 }
 
-export const schemaTypes = [heroType]
+export const venueRuleType = {
+  name: 'venueRule',
+  type: 'document',
+  title: 'Venue Rules',
+  fields: [
+    {
+      name: 'title',
+      type: 'string',
+      title: 'Rule Title',
+      description: 'Bold lead-in, e.g. Strict 1-Hour Slots:',
+      validation: (Rule: any) => Rule.required().max(80)
+    },
+    {
+      name: 'description',
+      type: 'text',
+      title: 'Rule Description',
+      description: 'Body text shown after the title.',
+      validation: (Rule: any) => Rule.required()
+    },
+    {
+      name: 'order',
+      type: 'number',
+      title: 'Display Order',
+      description: 'Lower numbers appear first.',
+      initialValue: 0
+    }
+  ],
+  preview: {
+    select: {
+      title: 'title',
+      subtitle: 'description'
+    }
+  }
+}
+
+export const schemaTypes = [heroType, venueRuleType]

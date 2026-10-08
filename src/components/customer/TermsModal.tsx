@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ShieldAlert, User, Mail, Phone, CheckCircle, Loader2, ArrowRight, QrCode, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import { compressImage } from '../../utils/imageCompression';
 import { uploadPaymentReceipt } from '../../services/bookingService';
+import { fetchVenueRules, FALLBACK_VENUE_RULES, type VenueRule } from '../../services/venueRulesService';
 import './TermsModal.css';
 
 interface TermsModalProps {
@@ -38,6 +39,17 @@ export const TermsModal: React.FC<TermsModalProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [venueRules, setVenueRules] = useState<VenueRule[]>(FALLBACK_VENUE_RULES);
+
+  useEffect(() => {
+    let isLive = true;
+    fetchVenueRules().then((fetched) => {
+      if (isLive) setVenueRules(fetched);
+    });
+    return () => {
+      isLive = false;
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -126,9 +138,9 @@ export const TermsModal: React.FC<TermsModalProps> = ({
             <div className="policy-box">
               <h4 className="policy-title">📌 Strict Venue Rules & No-Refund Policy</h4>
               <ul className="policy-list">
-                <li><strong>Strict 1-Hour Slots:</strong> Court access ends promptly at the end of your reserved hour.</li>
-                <li><strong>No-Refund Policy:</strong> Reservations are non-refundable once confirmed.</li>
-                <li><strong>Proper Footwear:</strong> Non-marking court shoes are required on all courts.</li>
+                {venueRules.map((rule) => (
+                  <li key={rule._id}><strong>{rule.title}</strong> {rule.description}</li>
+                ))}
               </ul>
             </div>
 
