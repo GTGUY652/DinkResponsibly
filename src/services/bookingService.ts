@@ -224,7 +224,8 @@ export const calculateRevenueOverviewMetrics = (
   dateRangeFilter: string = 'this_month',
   courtFilter: string = 'all',
   granularity: 'hour' | 'day' | 'week' | 'month' | 'year' = 'month',
-  refDate: Date = new Date()
+  refDate: Date = new Date(),
+  selectedMonth?: string
 ): RevenueOverviewData => {
   const pad = (n: number) => n.toString().padStart(2, '0');
   const formatDateStr = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -275,11 +276,19 @@ export const calculateRevenueOverviewMetrics = (
     ? Math.round(((weekRev - prevWeekRev) / prevWeekRev) * 100)
     : (weekRev > 0 ? 100 : 0);
 
-  const curYear = refDate.getFullYear();
-  const curMonth = refDate.getMonth() + 1;
+  // Month KPIs + chart follow the selected month picker when in 'this_month' mode.
+  // Today / Week / YTD always stay anchored to real today (refDate).
+  // Previously refDate was set to the 1st of the selected month, so the
+  // rolling 7-day week leaked into the previous month (e.g. Sep 25-Oct 1
+  // showed ₱2,500 while the Oct chart was empty).
+  const monthOverrideValid = !!selectedMonth && /^\d{4}-\d{2}$/.test(selectedMonth);
+  const viewYear = monthOverrideValid ? parseInt(selectedMonth!.split('-')[0], 10) : refDate.getFullYear();
+  const viewMonth = monthOverrideValid ? parseInt(selectedMonth!.split('-')[1], 10) : refDate.getMonth() + 1;
+  const curYear = viewYear;
+  const curMonth = viewMonth;
   const curMonthPrefix = `${curYear}-${pad(curMonth)}`;
 
-  const prevMonthDate = new Date(curYear, refDate.getMonth() - 1, 1);
+  const prevMonthDate = new Date(curYear, curMonth - 2, 1);
   const prevMonthPrefix = `${prevMonthDate.getFullYear()}-${pad(prevMonthDate.getMonth() + 1)}`;
 
   const monthRev = activeBookings
@@ -294,8 +303,8 @@ export const calculateRevenueOverviewMetrics = (
     ? Math.round(((monthRev - prevMonthRev) / prevMonthRev) * 100)
     : (monthRev > 0 ? 100 : 0);
 
-  const curYearStr = curYear.toString();
-  const prevYearStr = (curYear - 1).toString();
+  const curYearStr = refDate.getFullYear().toString();
+  const prevYearStr = (refDate.getFullYear() - 1).toString();
 
   const ytdRev = activeBookings
     .filter((b) => b.booking_date.startsWith(curYearStr))
@@ -445,10 +454,11 @@ export const fetchRevenueOverviewData = async (
   dateRange: string = 'this_month',
   courtFilter: string = 'all',
   granularity: 'hour' | 'day' | 'week' | 'month' | 'year' = 'month',
-  refDate: Date = new Date()
+  refDate: Date = new Date(),
+  selectedMonth?: string
 ): Promise<RevenueOverviewData> => {
   const bookings = await fetchAdminBookings();
-  return calculateRevenueOverviewMetrics(bookings, dateRange, courtFilter, granularity, refDate);
+  return calculateRevenueOverviewMetrics(bookings, dateRange, courtFilter, granularity, refDate, selectedMonth);
 };
 
 // --- AI CONSULTANT ACTION HELPERS ---
