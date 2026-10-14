@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
       - If requestedPeriod.type is "month", report total_revenue, bookings_count, abv, top court, and best/worst day from daily_breakdown using bullet points and bold text. Then ALSO return suggested_action show_heatmap with the same start_date/end_date so the owner gets text + visual.
       - If requestedPeriod.type is "day", report that day's total_revenue and bookings_count, then ALSO return suggested_action show_heatmap with start_date = end_date = that day.
       - If requestedPeriod is null, answer from "revenue" (current month) as before.
+      - NEVER invent revenue numbers for a past period when requestedPeriod is null. If the admin asks about a past month/day but requestedPeriod is null (date not parsed), do NOT claim ₱0 / 0 bookings. Instead return suggested_action show_heatmap with your best-guess start_date/end_date for that period and say you are pulling the report.
       - If requestedPeriod has 0 bookings, say plainly the period had ₱0 / no bookings — do not claim missing data.
       
       Always return your response in pure JSON format matching this schema exactly:

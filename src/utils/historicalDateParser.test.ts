@@ -58,4 +58,15 @@ describe('parseHistoricalDateQuery', () => {
     expect(parseHistoricalDateQuery('how is revenue this month?', REF)).toBeNull();
     expect(parseHistoricalDateQuery('show me peak hours', REF)).toBeNull();
   });
+
+  it('parses typo septmeber as september (fuzzy match)', () => {
+    expect(
+      parseHistoricalDateQuery('can you give me how much revenue i got on the month of septmeber?', REF)
+    ).toEqual({
+      start_date: '2026-09-01',
+      end_date: '2026-09-30',
+      type: 'month',
+      label: '2026-09',
+    });
+  });
 });

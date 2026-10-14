@@ -28,6 +28,45 @@ const isValidDate = (y: number, m: number, d: number) => {
   return d <= daysInMonth(y, m);
 };
 
+const FULL_MONTHS = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december',
+];
+
+const levenshtein = (a: string, b: string): number => {
+  const prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0];
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const temp = prev[j];
+      prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = temp;
+    }
+  }
+  return prev[b.length];
+};
+
+/** Fix common month typos (e.g. "septmeber" -> "september") before parsing. */
+const normalizeMonthTypos = (text: string): string =>
+  text.replace(/[a-z]{5,}/gi, (word) => {
+    const w = word.toLowerCase();
+    if (MONTHS[w]) return word;
+    let best = '';
+    let bestDist = 3;
+    for (const full of FULL_MONTHS) {
+      // Same first letter + close length avoids corrupting words like "much" -> "march".
+      if (w[0] !== full[0] || Math.abs(full.length - w.length) > 2) continue;
+      const dist = levenshtein(w, full);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = full;
+      }
+    }
+    // Only accept close matches (dist <= 2) to avoid false positives.
+    return bestDist <= 2 ? best : word;
+  });
+
 /**
  * Parse a free-text admin query for an explicit historical month or day.
  * Returns null when no historical date intent is found (e.g. "this month").
@@ -38,7 +77,7 @@ export function parseHistoricalDateQuery(
   text: string,
   refDate: Date = new Date()
 ): HistoricalDateRange | null {
-  const lower = text.toLowerCase();
+  const lower = normalizeMonthTypos(text).toLowerCase();
   const refYear = refDate.getFullYear();
   const refMonth = refDate.getMonth() + 1;
 
@@ -128,7 +167,9 @@ export function parseHistoricalDateQuery(
   }
 
   // 6. Month name + optional year: "august", "month of august 2026", "whole month of september"
-  const monthOnly = lower.match(new RegExp(`\\b(${monthNames})\\b(?:\\s*,?\\s*(\\d{4}))?`));
+  // Take the LAST match: the target month usually comes at the end of the query.
+  const monthOnlyMatches = [...lower.matchAll(new RegExp(`\\b(${monthNames})\\b(?:\\s*,?\\s*(\\d{4}))?`, 'g'))];
+  const monthOnly = monthOnlyMatches.length > 0 ? monthOnlyMatches[monthOnlyMatches.length - 1] : null;
   if (monthOnly) {
     const m = MONTHS[monthOnly[1]];
     let y = monthOnly[2] ? Number(monthOnly[2]) : refYear;
