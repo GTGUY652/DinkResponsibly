@@ -65,6 +65,14 @@ Deno.serve(async (req) => {
       3. activate_staff: { staff_id: string }
       4. prepare_block: { start_date: string, end_date: string, courts: string[], start_hour: number, end_hour: number, reason: string } // courts should be an array of court names (e.g., ["Court A", "Court B"])
       5. show_heatmap: { start_date: string, end_date: string } // CRITICAL RULE: ONLY use this action when the admin EXPLICITLY asks to GENERATE or SHOW a NEW heatmap. Do NOT repeat this action on follow-up questions! If the user is just asking follow-up questions about the data, only answer in text_response and omit the heatmap action.
+
+      HISTORICAL REVENUE RULES:
+      - The client context contains "revenue" (current this-month KPIs) AND "requestedPeriod" (explicit past month/day the admin asked about, with pre-computed total_revenue, bookings_count, abv, court_breakdown, daily_breakdown).
+      - When requestedPeriod is present and non-null, you MUST answer from its numbers. NEVER say you have no record, and NEVER invent a cutoff like "tracking began in October 2026". The database contains full history.
+      - If requestedPeriod.type is "month", report total_revenue, bookings_count, abv, top court, and best/worst day from daily_breakdown using bullet points and bold text. Then ALSO return suggested_action show_heatmap with the same start_date/end_date so the owner gets text + visual.
+      - If requestedPeriod.type is "day", report that day's total_revenue and bookings_count, then ALSO return suggested_action show_heatmap with start_date = end_date = that day.
+      - If requestedPeriod is null, answer from "revenue" (current month) as before.
+      - If requestedPeriod has 0 bookings, say plainly the period had ₱0 / no bookings — do not claim missing data.
       
       Always return your response in pure JSON format matching this schema exactly:
       {

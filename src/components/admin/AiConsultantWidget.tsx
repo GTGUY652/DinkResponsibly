@@ -4,6 +4,7 @@ import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMainten
 import type { BookingRecord } from '../../services/bookingService';
 import { X, Send, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
+import { parseHistoricalDateQuery } from '../../utils/historicalDateParser';
 import { ActionableHeatmap } from './ActionableHeatmap';
 import dinkAiIcon from '../../assets/dink_ai_chat_icon.jpg';
 
@@ -147,13 +148,75 @@ export const AiConsultantWidget: React.FC = () => {
     }
   }, [messages]);
 
-  const gatherContext = async () => {
+  const gatherContext = async (userText?: string) => {
     // Fetch live data so the AI knows IDs and metrics
     const courts = await fetchCourts();
     const { data: staff } = await supabase.from('profiles').select('id, full_name, email, role, is_active');
     const revenue = await fetchRevenueOverviewData('this_month', 'all', 'day');
     const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    return { courts, staff, revenue, currentDate };
+
+    // Historical lookup: parse explicit month/day intent (e.g. "month of august",
+    // "august 1 2026", "september 24") so the AI answers from real bookings
+    // instead of claiming no record exists. Capped to 31 days by the parser.
+    let requestedPeriod: {
+      start_date: string;
+      end_date: string;
+      type: string;
+      label: string;
+      total_revenue: number;
+      bookings_count: number;
+      abv: number;
+      court_breakdown: { name: string; bookings: number; revenue: number }[];
+      daily_breakdown: { date: string; revenue: number; bookings: number }[];
+    } | null = null;
+    try {
+      if (userText) {
+        const parsed = parseHistoricalDateQuery(userText, new Date());
+        if (parsed) {
+          const courtIds = courts.map(c => c.id);
+          const histBookings = courtIds.length > 0
+            ? await fetchBookingsForDateRange(parsed.start_date, parsed.end_date, courtIds)
+            : [];
+          const real = histBookings.filter(b => !b.booking_code?.includes('MAINT'));
+          const active = real.filter(b => b.status !== 'cancelled' && b.status !== 'CANCELLED');
+          const total_revenue = active.reduce((sum, b) => sum + (b.total_price || 0), 0);
+          const bookings_count = active.length;
+          const abv = bookings_count > 0 ? Math.round((total_revenue / bookings_count) * 100) / 100 : 0;
+
+          const courtMap: Record<string, { bookings: number; revenue: number }> = {};
+          active.forEach(b => {
+            const name = (b as any).court_name || courts.find(c => c.id === b.court_id)?.name || b.court_id;
+            if (!courtMap[name]) courtMap[name] = { bookings: 0, revenue: 0 };
+            courtMap[name].bookings += 1;
+            courtMap[name].revenue += b.total_price || 0;
+          });
+
+          const dailyMap: Record<string, { revenue: number; bookings: number }> = {};
+          active.forEach(b => {
+            if (!dailyMap[b.booking_date]) dailyMap[b.booking_date] = { revenue: 0, bookings: 0 };
+            dailyMap[b.booking_date].revenue += b.total_price || 0;
+            dailyMap[b.booking_date].bookings += 1;
+          });
+
+          requestedPeriod = {
+            ...parsed,
+            total_revenue,
+            bookings_count,
+            abv,
+            court_breakdown: Object.entries(courtMap)
+              .map(([name, v]) => ({ name, ...v }))
+              .sort((a, b) => b.revenue - a.revenue),
+            daily_breakdown: Object.entries(dailyMap)
+              .map(([date, v]) => ({ date, ...v }))
+              .sort((a, b) => a.date.localeCompare(b.date)),
+          };
+        }
+      }
+    } catch (e) {
+      console.error('Historical context fetch failed:', e);
+    }
+
+    return { courts, staff, revenue, requestedPeriod, currentDate };
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -169,7 +232,7 @@ export const AiConsultantWidget: React.FC = () => {
 
     try {
       // 1. Gather context and build prompt array
-      const contextData = await gatherContext();
+      const contextData = await gatherContext(userText);
       
       const promptMessages = messages.filter(m => m.role !== 'error').map(m => ({
         role: m.role,
