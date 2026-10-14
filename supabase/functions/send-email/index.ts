@@ -177,7 +177,8 @@ Deno.serve(async (req) => {
       const TicketReplySchema = z.object({
         action: z.literal("ticket_reply"),
         ticket_id: z.string().uuid(),
-        admin_reply_message: z.string().min(1).max(2000)
+        admin_reply_message: z.string().min(1).max(2000),
+        new_status: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED"]).default("IN_PROGRESS")
       });
       
       const validation = TicketReplySchema.safeParse(payload);
@@ -188,7 +189,7 @@ Deno.serve(async (req) => {
         });
       }
       
-      const { ticket_id, admin_reply_message } = validation.data;
+      const { ticket_id, admin_reply_message, new_status } = validation.data;
 
       const authHeader = req.headers.get("Authorization");
       if (!authHeader) throw new Error("Missing Authorization header");
@@ -251,7 +252,7 @@ Deno.serve(async (req) => {
         await sendSmtpEmail(ticket.guest_email, `Update on your Ticket: ${ticket.ticket_reference}`, htmlBody);
         
         await supabase.from("support_tickets").update({
-          status: "RESOLVED",
+          status: new_status,
           admin_reply: admin_reply_message,
           replied_by: user.id,
           replied_at: new Date().toISOString()
@@ -264,7 +265,7 @@ Deno.serve(async (req) => {
           ticket_id: ticket_id
         });
         
-        return new Response(JSON.stringify({ success: true }), { 
+        return new Response(JSON.stringify({ success: true, new_status }), { 
           status: 200, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         });

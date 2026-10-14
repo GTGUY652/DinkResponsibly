@@ -54,6 +54,9 @@
 .ticket-card.open {
   border-left: 4px solid #f59e0b;
 }
+.ticket-card.in_progress {
+  border-left: 4px solid #38bdf8;
+}
 .ticket-card.resolved {
   border-left: 4px solid var(--accent-emerald);
 }
@@ -91,6 +94,12 @@
   background: rgba(245, 158, 11, 0.15);
   color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-pill.in_progress {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 .status-pill.resolved {
@@ -304,6 +313,38 @@
   font-size: 0.9rem;
   resize: vertical;
   transition: all 0.2s ease;
+}
+
+.form-group {
+  margin-bottom: 1.1rem;
+}
+
+.form-group > label {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.status-select {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  background: rgba(7, 11, 20, 0.75);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.status-select:focus {
+  border-color: var(--accent-lime);
+  box-shadow: 0 0 15px var(--accent-lime-glow);
 }
 
 .modal-body textarea:focus {

@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../../services/supabase';
 import { Search, Filter, MessageSquare, Send, CheckCircle2, Clock, Mail, AlertCircle, X, ChevronDown } from 'lucide-react';
 import './TicketPortal.css';
+import type { SupportTicketStatus } from './supportTicketStatus';
+import { supportTicketStatusLabel } from './supportTicketStatus';
 
 export interface SupportTicket {
   id: string;
@@ -11,7 +13,7 @@ export interface SupportTicket {
   guest_email: string;
   subject: string;
   message: string;
-  status: 'OPEN' | 'RESOLVED';
+  status: SupportTicketStatus;
   admin_reply?: string;
   replied_at?: string;
   created_at: string;
@@ -41,8 +43,16 @@ export const TicketPortal: React.FC = () => {
     // Modal State for replying
     const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
     const [replyMessage, setReplyMessage] = useState('');
+    const [replyStatus, setReplyStatus] = useState<SupportTicketStatus>('IN_PROGRESS');
     const [sending, setSending] = useState(false);
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    const openReplyModal = (ticket: SupportTicket) => {
+        setSelectedTicket(ticket);
+        setReplyMessage('');
+        // A reply acknowledges the report; resolving is a deliberate choice.
+        setReplyStatus('IN_PROGRESS');
+    };
 
     const fetchTickets = async () => {
         setLoading(true);
@@ -108,7 +118,8 @@ export const TicketPortal: React.FC = () => {
                 body: {
                     action: 'ticket_reply',
                     ticket_id: selectedTicket.id,
-                    admin_reply_message: replyMessage
+                    admin_reply_message: replyMessage,
+                    new_status: replyStatus
                 }
             });
             
@@ -120,7 +131,8 @@ export const TicketPortal: React.FC = () => {
                 // Catches gracefully handled API errors returned as JSON
                 setAlert({ type: 'error', text: `Email dispatch failed: ${data.error}` });
             } else {
-                setAlert({ type: 'success', text: `Reply sent to ${selectedTicket.guest_email} & ticket resolved!` });
+                const appliedStatus = (data && data.new_status ? data.new_status : replyStatus) as string;
+                setAlert({ type: 'success', text: `Reply sent to ${selectedTicket.guest_email} & ticket marked ${supportTicketStatusLabel(appliedStatus)}!` });
                 setSelectedTicket(null);
                 setReplyMessage('');
                 // Refresh the list to show the new status
@@ -188,7 +200,7 @@ export const TicketPortal: React.FC = () => {
                         <Filter size={14} style={{ marginRight: '0.25rem' }} />
                         {selectedStatus === 'ALL' 
                             ? 'All Statuses' 
-                            : selectedStatus === 'OPEN' ? 'Open Tickets' : 'Resolved Tickets'}
+                            : selectedStatus === 'OPEN' ? 'Open Tickets' : selectedStatus === 'IN_PROGRESS' ? 'In Progress Tickets' : 'Resolved Tickets'}
                         <ChevronDown size={14} style={{ marginLeft: '0.25rem' }} />
                     </button>
                     <div className={`status-picker-modal ${isStatusPickerOpen ? 'open' : ''}`}>
@@ -209,6 +221,15 @@ export const TicketPortal: React.FC = () => {
                             }}
                         >
                             Open Tickets
+                        </button>
+                        <button 
+                            className={`status-cell ${selectedStatus === 'IN_PROGRESS' ? 'selected' : ''}`}
+                            onClick={() => {
+                                setSelectedStatus('IN_PROGRESS');
+                                setIsStatusPickerOpen(false);
+                            }}
+                        >
+                            In Progress Tickets
                         </button>
                         <button 
                             className={`status-cell ${selectedStatus === 'RESOLVED' ? 'selected' : ''}`}
@@ -239,7 +260,7 @@ export const TicketPortal: React.FC = () => {
                         ) : (
                             <Clock className="w-3.5 h-3.5" />
                         )}
-                        {t.status}
+                        {supportTicketStatusLabel(t.status)}
                         </span>
                     </div>
                     <div className="ticket-guest">
@@ -261,7 +282,7 @@ export const TicketPortal: React.FC = () => {
                         <span className="created-date">{formatDate(t.created_at)}</span>
                         {t.status !== 'RESOLVED' && (
                             <button
-                                onClick={() => setSelectedTicket(t)}
+                                onClick={() => openReplyModal(t)}
                                 className="reply-btn"
                             >
                                 <MessageSquare className="w-3.5 h-3.5 mr-1" />
@@ -303,6 +324,18 @@ export const TicketPortal: React.FC = () => {
                                         onChange={(e) => setReplyMessage(e.target.value)}
                                         required
                                     />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="replyStatus">Ticket status after sending:</label>
+                                    <select
+                                        id="replyStatus"
+                                        value={replyStatus}
+                                        onChange={(e) => setReplyStatus(e.target.value as SupportTicketStatus)}
+                                        className="status-select"
+                                    >
+                                        <option value="IN_PROGRESS">In Progress — needs follow-up</option>
+                                        <option value="RESOLVED">Resolved — no further action</option>
+                                    </select>
                                 </div>
                                 <div className="modal-actions">
                                     <button type="button" onClick={() => setSelectedTicket(null)} className="cancel-btn">
