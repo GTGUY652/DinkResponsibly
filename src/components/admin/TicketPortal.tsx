@@ -343,7 +343,7 @@ export const TicketPortal: React.FC = () => {
                                     </button>
                                     <button type="submit" disabled={sending} className="send-email-btn">
                                         <Send className="w-4 h-4 mr-1.5" />
-                                        {sending ? 'Sending via Resend...' : 'Dispatch Email Reply'}
+                                        {sending ? 'Sending...' : 'Dispatch Email Reply'}
                                     </button>
                                 </div>
                             </form>
