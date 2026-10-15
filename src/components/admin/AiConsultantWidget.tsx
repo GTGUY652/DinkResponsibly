@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { X, Send, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
 import { parseHistoricalDateQuery } from '../../utils/historicalDateParser';
+import { canConfirmAiAction } from './aiActionPermissions';
 import { ActionableHeatmap } from './ActionableHeatmap';
 import dinkAiIcon from '../../assets/dink_ai_chat_icon.jpg';
 
@@ -23,7 +24,7 @@ interface ChatMessage {
   isHidden?: boolean;
 }
 
-const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onComplete: (msgId: string, text: string) => void }> = ({ msgId, action, onComplete }) => {
+const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, isOwner: boolean, onComplete: (msgId: string, text: string) => void }> = ({ msgId, action, isOwner, onComplete }) => {
   const [startHour, setStartHour] = useState(action.payload.start_hour);
   const [endHour, setEndHour] = useState(action.payload.end_hour);
   const [overlaps, setOverlaps] = useState<BookingRecord[]>([]);
@@ -120,6 +121,8 @@ const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onCo
         <button disabled className="action-btn" style={{ background: '#4b5563', cursor: 'not-allowed' }}>
           Cannot Override Players
         </button>
+      ) : !isOwner ? (
+        <p className="text-xs text-amber-400">🔒 Owner only: ask an OWNER account to confirm this block.</p>
       ) : (
         <button onClick={handleConfirm} className="action-btn" style={{ background: maintOverlaps.length > 0 ? '#3b82f6' : '#10b981' }}>
           <CheckCircle size={14} className="inline mr-1" /> {maintOverlaps.length > 0 ? 'Overwrite Blocks' : 'Confirm Block'}
@@ -376,6 +379,11 @@ export const AiConsultantWidget: React.FC = () => {
   };
 
   const executeAction = async (msgId: string, action: ActionIntent) => {
+    // Backstop: mutating actions are OWNER-only even if the confirm UI is bypassed.
+    if (!canConfirmAiAction(profile?.role, action.type)) {
+      alert('Owner only: ask an OWNER account to confirm this change.');
+      return;
+    }
     try {
       if (action.type === 'update_rate') {
         const allCourts = await fetchCourts();
@@ -447,7 +455,7 @@ export const AiConsultantWidget: React.FC = () => {
                   msg.action.type === 'set_court_status' ? (
                     <CourtStatusCard msgId={msg.id} action={msg.action} isOwner={isOwner} onComplete={handleActionComplete} />
                   ) : msg.action.type === 'prepare_block' ? (
-                    <InteractiveBlockCard msgId={msg.id} action={msg.action} onComplete={handleActionComplete} />
+                    <InteractiveBlockCard msgId={msg.id} action={msg.action} isOwner={isOwner} onComplete={handleActionComplete} />
                   ) : msg.action.type === 'show_heatmap' ? (
                     <ActionableHeatmap 
                        payload={msg.action.payload} 
@@ -462,9 +470,13 @@ export const AiConsultantWidget: React.FC = () => {
                   ) : (
                     <div className="action-card">
                       <p>Suggested Action: {msg.action.type.replace('_', ' ').toUpperCase()}</p>
-                      <button onClick={() => executeAction(msg.id, msg.action!)} className="action-btn">
-                        <CheckCircle size={14} className="inline mr-1" /> Confirm Action
-                      </button>
+                      {canConfirmAiAction(profile?.role, msg.action.type) ? (
+                        <button onClick={() => executeAction(msg.id, msg.action!)} className="action-btn">
+                          <CheckCircle size={14} className="inline mr-1" /> Confirm Action
+                        </button>
+                      ) : (
+                        <p className="text-xs text-amber-400">🔒 Owner only: ask an OWNER account to confirm this change.</p>
+                      )}
                     </div>
                   )
                 )}
