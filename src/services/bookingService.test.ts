@@ -9,6 +9,7 @@ import {
   deleteBookingRecord,
   calculateRevenueOverviewMetrics,
   fetchRevenueOverviewData,
+  updateCourtStatus,
 } from './bookingService';
 import type { BookingRecord, CourtRecord } from './bookingService';
 import { supabase } from './supabase';
@@ -197,6 +198,41 @@ describe('bookingService', () => {
       await updateBookingStatus('uuid-123', 'checked_in');
       expect(supabase.from).toHaveBeenCalledWith('bookings');
       expect(updateMock).toHaveBeenCalledWith({ status: 'checked_in' });
+    });
+  });
+
+  describe('updateCourtStatus (court maintenance toggle)', () => {
+    it('should set is_active false when putting a court under maintenance', async () => {
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      (supabase.from as any).mockReturnValue({ update: updateMock });
+
+      await updateCourtStatus('court-uuid-1', false);
+      expect(supabase.from).toHaveBeenCalledWith('courts');
+      expect(updateMock).toHaveBeenCalledWith({ is_active: false });
+    });
+
+    it('should set is_active true when putting a court back operational', async () => {
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      (supabase.from as any).mockReturnValue({ update: updateMock });
+
+      await updateCourtStatus('court-uuid-1', true);
+      expect(updateMock).toHaveBeenCalledWith({ is_active: true });
+    });
+
+    it('should throw when the update fails (e.g. STAFF blocked by RLS)', async () => {
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: { message: 'permission denied' } }),
+      });
+
+      (supabase.from as any).mockReturnValue({ update: updateMock });
+
+      await expect(updateCourtStatus('court-uuid-1', false)).rejects.toThrow('permission denied');
     });
   });
 

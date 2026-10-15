@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange } from '../../services/bookingService';
-import type { BookingRecord } from '../../services/bookingService';
+import { updateCourtRate, updateCourtStatus, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange } from '../../services/bookingService';
+import type { BookingRecord, CourtRecord } from '../../services/bookingService';
+import { useAuth } from '../../context/AuthContext';
 import { X, Send, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
+import { parseHistoricalDateQuery } from '../../utils/historicalDateParser';
+import { canConfirmAiAction } from './aiActionPermissions';
 import { ActionableHeatmap } from './ActionableHeatmap';
 import dinkAiIcon from '../../assets/dink_ai_chat_icon.jpg';
 
 interface ActionIntent {
-  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule' | 'prepare_block' | 'show_heatmap';
+  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule' | 'prepare_block' | 'show_heatmap' | 'set_court_status';
   payload: any;
 }
 
@@ -21,7 +24,7 @@ interface ChatMessage {
   isHidden?: boolean;
 }
 
-const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onComplete: (msgId: string, text: string) => void }> = ({ msgId, action, onComplete }) => {
+const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, isOwner: boolean, onComplete: (msgId: string, text: string) => void }> = ({ msgId, action, isOwner, onComplete }) => {
   const [startHour, setStartHour] = useState(action.payload.start_hour);
   const [endHour, setEndHour] = useState(action.payload.end_hour);
   const [overlaps, setOverlaps] = useState<BookingRecord[]>([]);
@@ -118,6 +121,8 @@ const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onCo
         <button disabled className="action-btn" style={{ background: '#4b5563', cursor: 'not-allowed' }}>
           Cannot Override Players
         </button>
+      ) : !isOwner ? (
+        <p className="text-xs text-amber-400">🔒 Owner only: ask an OWNER account to confirm this block.</p>
       ) : (
         <button onClick={handleConfirm} className="action-btn" style={{ background: maintOverlaps.length > 0 ? '#3b82f6' : '#10b981' }}>
           <CheckCircle size={14} className="inline mr-1" /> {maintOverlaps.length > 0 ? 'Overwrite Blocks' : 'Confirm Block'}
@@ -127,10 +132,107 @@ const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onCo
   );
 };
 
+const CourtStatusCard: React.FC<{ msgId: string, action: ActionIntent, isOwner: boolean, onComplete: (msgId: string, text: string) => void }> = ({ msgId, action, isOwner, onComplete }) => {
+  const [courts, setCourts] = useState<CourtRecord[]>([]);
+  const [upcoming, setUpcoming] = useState<BookingRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const targetActive = action.payload.is_active === true;
+  const hasTarget = typeof action.payload.is_active === 'boolean';
+  const targetLabel = targetActive ? 'Operational' : 'Under Maintenance';
+
+  useEffect(() => {
+    const load = async () => {
+      const allCourts = await fetchCourts();
+      setCourts(allCourts);
+      const ids = allCourts
+        .filter(c => action.payload.courts?.includes(c.name))
+        .map(c => c.id);
+
+      if (ids.length > 0) {
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const today = new Date();
+        const plus30 = new Date();
+        plus30.setDate(today.getDate() + 30);
+        const bookings = await fetchBookingsForDateRange(fmt(today), fmt(plus30), ids);
+        // Warn only: real upcoming player bookings stay booked, staff handle on the day.
+        setUpcoming(bookings.filter(b =>
+          !b.booking_code?.includes('MAINT') &&
+          b.status !== 'cancelled' && b.status !== 'CANCELLED' &&
+          b.booking_date >= fmt(today)
+        ));
+      }
+      setLoading(false);
+    };
+    load();
+  }, [action.payload]);
+
+  const affectedRevenue = upcoming.reduce((sum, b) => sum + (b.total_price || 0), 0);
+
+  const handleConfirm = async () => {
+    try {
+      const allCourts = await fetchCourts();
+      const ids = allCourts
+        .filter(c => action.payload.courts?.includes(c.name))
+        .map(c => c.id);
+      for (const courtId of ids) {
+        await updateCourtStatus(courtId, targetActive);
+      }
+      onComplete(msgId, `\n\n✅ ${action.payload.courts.join(', ')} ${ids.length > 1 ? 'are' : 'is'} now ${targetLabel}.`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update court status.');
+    }
+  };
+
+  if (!hasTarget) {
+    return (
+      <div className="action-card" style={{ marginTop: '10px' }}>
+        <p className="text-xs text-red-400">I couldn't determine the requested court status. Please say "put under maintenance" or "back operational".</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="action-card" style={{ marginTop: '10px' }}>
+      <p><strong>Set Court Status:</strong> {targetLabel}</p>
+      <p className="text-xs text-gray-400 mb-2">Courts: {action.payload.courts?.join(', ')}</p>
+      {!loading && courts
+        .filter(c => action.payload.courts?.includes(c.name))
+        .map(c => (
+          <p key={c.id} className="text-xs text-gray-400 mb-1">
+            {c.name}: currently <strong>{c.is_active ? 'Operational' : 'Under Maintenance'}</strong>
+          </p>
+        ))}
+
+      {loading ? (
+        <p className="text-xs text-yellow-400">Checking upcoming bookings...</p>
+      ) : upcoming.length > 0 ? (
+        <div className="text-red-400 text-xs mb-3 p-2 border border-red-500 rounded bg-red-900 bg-opacity-20">
+          ⚠️ Warning: {upcoming.length} upcoming player booking(s) (₱{affectedRevenue}) in the next 30 days will be affected.
+          <br /><strong>Action:</strong> They stay booked — let staff handle them on the day.
+        </div>
+      ) : (
+        <p className="text-emerald-400 text-xs mb-3">✅ No upcoming player bookings in the next 30 days.</p>
+      )}
+
+      {!isOwner ? (
+        <p className="text-xs text-amber-400">🔒 Owner only: ask an OWNER account to confirm this change.</p>
+      ) : (
+        <button onClick={handleConfirm} className="action-btn" style={{ background: targetActive ? '#10b981' : '#f59e0b' }}>
+          <CheckCircle size={14} className="inline mr-1" /> Confirm: {targetLabel}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export const AiConsultantWidget: React.FC = () => {
+  const { profile } = useAuth();
+  const isOwner = profile?.role === 'OWNER';
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{
-    id: '1', role: 'model', text: "Hello! I'm Dink-Ai. Ask me about revenue, or ask me to block a court, update a rate, or disable a staff member."
+    id: '1', role: 'model', text: "Hello! I'm Dink-Ai. Ask me about revenue, put a court under maintenance, block a court, update a rate, or disable a staff member."
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -147,13 +249,75 @@ export const AiConsultantWidget: React.FC = () => {
     }
   }, [messages]);
 
-  const gatherContext = async () => {
+  const gatherContext = async (userText?: string) => {
     // Fetch live data so the AI knows IDs and metrics
     const courts = await fetchCourts();
     const { data: staff } = await supabase.from('profiles').select('id, full_name, email, role, is_active');
     const revenue = await fetchRevenueOverviewData('this_month', 'all', 'day');
     const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    return { courts, staff, revenue, currentDate };
+
+    // Historical lookup: parse explicit month/day intent (e.g. "month of august",
+    // "august 1 2026", "september 24") so the AI answers from real bookings
+    // instead of claiming no record exists. Capped to 31 days by the parser.
+    let requestedPeriod: {
+      start_date: string;
+      end_date: string;
+      type: string;
+      label: string;
+      total_revenue: number;
+      bookings_count: number;
+      abv: number;
+      court_breakdown: { name: string; bookings: number; revenue: number }[];
+      daily_breakdown: { date: string; revenue: number; bookings: number }[];
+    } | null = null;
+    try {
+      if (userText) {
+        const parsed = parseHistoricalDateQuery(userText, new Date());
+        if (parsed) {
+          const courtIds = courts.map(c => c.id);
+          const histBookings = courtIds.length > 0
+            ? await fetchBookingsForDateRange(parsed.start_date, parsed.end_date, courtIds)
+            : [];
+          const real = histBookings.filter(b => !b.booking_code?.includes('MAINT'));
+          const active = real.filter(b => b.status !== 'cancelled' && b.status !== 'CANCELLED');
+          const total_revenue = active.reduce((sum, b) => sum + (b.total_price || 0), 0);
+          const bookings_count = active.length;
+          const abv = bookings_count > 0 ? Math.round((total_revenue / bookings_count) * 100) / 100 : 0;
+
+          const courtMap: Record<string, { bookings: number; revenue: number }> = {};
+          active.forEach(b => {
+            const name = (b as any).court_name || courts.find(c => c.id === b.court_id)?.name || b.court_id;
+            if (!courtMap[name]) courtMap[name] = { bookings: 0, revenue: 0 };
+            courtMap[name].bookings += 1;
+            courtMap[name].revenue += b.total_price || 0;
+          });
+
+          const dailyMap: Record<string, { revenue: number; bookings: number }> = {};
+          active.forEach(b => {
+            if (!dailyMap[b.booking_date]) dailyMap[b.booking_date] = { revenue: 0, bookings: 0 };
+            dailyMap[b.booking_date].revenue += b.total_price || 0;
+            dailyMap[b.booking_date].bookings += 1;
+          });
+
+          requestedPeriod = {
+            ...parsed,
+            total_revenue,
+            bookings_count,
+            abv,
+            court_breakdown: Object.entries(courtMap)
+              .map(([name, v]) => ({ name, ...v }))
+              .sort((a, b) => b.revenue - a.revenue),
+            daily_breakdown: Object.entries(dailyMap)
+              .map(([date, v]) => ({ date, ...v }))
+              .sort((a, b) => a.date.localeCompare(b.date)),
+          };
+        }
+      }
+    } catch (e) {
+      console.error('Historical context fetch failed:', e);
+    }
+
+    return { courts, staff, revenue, requestedPeriod, currentDate };
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -169,7 +333,7 @@ export const AiConsultantWidget: React.FC = () => {
 
     try {
       // 1. Gather context and build prompt array
-      const contextData = await gatherContext();
+      const contextData = await gatherContext(userText);
       
       const promptMessages = messages.filter(m => m.role !== 'error').map(m => ({
         role: m.role,
@@ -215,6 +379,11 @@ export const AiConsultantWidget: React.FC = () => {
   };
 
   const executeAction = async (msgId: string, action: ActionIntent) => {
+    // Backstop: mutating actions are OWNER-only even if the confirm UI is bypassed.
+    if (!canConfirmAiAction(profile?.role, action.type)) {
+      alert('Owner only: ask an OWNER account to confirm this change.');
+      return;
+    }
     try {
       if (action.type === 'update_rate') {
         const allCourts = await fetchCourts();
@@ -233,6 +402,15 @@ export const AiConsultantWidget: React.FC = () => {
         await disableStaffAccount(action.payload.staff_id);
       } else if (action.type === 'activate_staff') {
         await enableStaffAccount(action.payload.staff_id);
+      } else if (action.type === 'set_court_status') {
+        const allCourts = await fetchCourts();
+        const targetIds = allCourts
+          .filter(c => action.payload.courts?.includes(c.name))
+          .map(c => c.id);
+        const targetActive = action.payload.is_active === true;
+        for (const courtId of targetIds) {
+          await updateCourtStatus(courtId, targetActive);
+        }
       } else if (action.type === 'block_schedule') {
         await createMaintenanceBlock(
           action.payload.court_id, 
@@ -274,8 +452,10 @@ export const AiConsultantWidget: React.FC = () => {
                 
                 {/* Action Confirmation Card */}
                 {msg.action && !msg.actionExecuted && msg.role === 'model' && (
-                  msg.action.type === 'prepare_block' ? (
-                    <InteractiveBlockCard msgId={msg.id} action={msg.action} onComplete={handleActionComplete} />
+                  msg.action.type === 'set_court_status' ? (
+                    <CourtStatusCard msgId={msg.id} action={msg.action} isOwner={isOwner} onComplete={handleActionComplete} />
+                  ) : msg.action.type === 'prepare_block' ? (
+                    <InteractiveBlockCard msgId={msg.id} action={msg.action} isOwner={isOwner} onComplete={handleActionComplete} />
                   ) : msg.action.type === 'show_heatmap' ? (
                     <ActionableHeatmap 
                        payload={msg.action.payload} 
@@ -290,9 +470,13 @@ export const AiConsultantWidget: React.FC = () => {
                   ) : (
                     <div className="action-card">
                       <p>Suggested Action: {msg.action.type.replace('_', ' ').toUpperCase()}</p>
-                      <button onClick={() => executeAction(msg.id, msg.action!)} className="action-btn">
-                        <CheckCircle size={14} className="inline mr-1" /> Confirm Action
-                      </button>
+                      {canConfirmAiAction(profile?.role, msg.action.type) ? (
+                        <button onClick={() => executeAction(msg.id, msg.action!)} className="action-btn">
+                          <CheckCircle size={14} className="inline mr-1" /> Confirm Action
+                        </button>
+                      ) : (
+                        <p className="text-xs text-amber-400">🔒 Owner only: ask an OWNER account to confirm this change.</p>
+                      )}
                     </div>
                   )
                 )}
