@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { updateCourtRate, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange } from '../../services/bookingService';
-import type { BookingRecord } from '../../services/bookingService';
+import { updateCourtRate, updateCourtStatus, disableStaffAccount, enableStaffAccount, createMaintenanceBlock, fetchCourts, fetchRevenueOverviewData, fetchBookingsForDateRange } from '../../services/bookingService';
+import type { BookingRecord, CourtRecord } from '../../services/bookingService';
+import { useAuth } from '../../context/AuthContext';
 import { X, Send, CheckCircle, } from 'lucide-react';
 import './AiConsultantWidget.css';
 import { parseHistoricalDateQuery } from '../../utils/historicalDateParser';
@@ -9,7 +10,7 @@ import { ActionableHeatmap } from './ActionableHeatmap';
 import dinkAiIcon from '../../assets/dink_ai_chat_icon.jpg';
 
 interface ActionIntent {
-  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule' | 'prepare_block' | 'show_heatmap';
+  type: 'update_rate' | 'disable_staff' | 'activate_staff' | 'block_schedule' | 'prepare_block' | 'show_heatmap' | 'set_court_status';
   payload: any;
 }
 
@@ -128,10 +129,107 @@ const InteractiveBlockCard: React.FC<{ msgId: string, action: ActionIntent, onCo
   );
 };
 
+const CourtStatusCard: React.FC<{ msgId: string, action: ActionIntent, isOwner: boolean, onComplete: (msgId: string, text: string) => void }> = ({ msgId, action, isOwner, onComplete }) => {
+  const [courts, setCourts] = useState<CourtRecord[]>([]);
+  const [upcoming, setUpcoming] = useState<BookingRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const targetActive = action.payload.is_active === true;
+  const hasTarget = typeof action.payload.is_active === 'boolean';
+  const targetLabel = targetActive ? 'Operational' : 'Under Maintenance';
+
+  useEffect(() => {
+    const load = async () => {
+      const allCourts = await fetchCourts();
+      setCourts(allCourts);
+      const ids = allCourts
+        .filter(c => action.payload.courts?.includes(c.name))
+        .map(c => c.id);
+
+      if (ids.length > 0) {
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const today = new Date();
+        const plus30 = new Date();
+        plus30.setDate(today.getDate() + 30);
+        const bookings = await fetchBookingsForDateRange(fmt(today), fmt(plus30), ids);
+        // Warn only: real upcoming player bookings stay booked, staff handle on the day.
+        setUpcoming(bookings.filter(b =>
+          !b.booking_code?.includes('MAINT') &&
+          b.status !== 'cancelled' && b.status !== 'CANCELLED' &&
+          b.booking_date >= fmt(today)
+        ));
+      }
+      setLoading(false);
+    };
+    load();
+  }, [action.payload]);
+
+  const affectedRevenue = upcoming.reduce((sum, b) => sum + (b.total_price || 0), 0);
+
+  const handleConfirm = async () => {
+    try {
+      const allCourts = await fetchCourts();
+      const ids = allCourts
+        .filter(c => action.payload.courts?.includes(c.name))
+        .map(c => c.id);
+      for (const courtId of ids) {
+        await updateCourtStatus(courtId, targetActive);
+      }
+      onComplete(msgId, `\n\n✅ ${action.payload.courts.join(', ')} ${ids.length > 1 ? 'are' : 'is'} now ${targetLabel}.`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update court status.');
+    }
+  };
+
+  if (!hasTarget) {
+    return (
+      <div className="action-card" style={{ marginTop: '10px' }}>
+        <p className="text-xs text-red-400">I couldn't determine the requested court status. Please say "put under maintenance" or "back operational".</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="action-card" style={{ marginTop: '10px' }}>
+      <p><strong>Set Court Status:</strong> {targetLabel}</p>
+      <p className="text-xs text-gray-400 mb-2">Courts: {action.payload.courts?.join(', ')}</p>
+      {!loading && courts
+        .filter(c => action.payload.courts?.includes(c.name))
+        .map(c => (
+          <p key={c.id} className="text-xs text-gray-400 mb-1">
+            {c.name}: currently <strong>{c.is_active ? 'Operational' : 'Under Maintenance'}</strong>
+          </p>
+        ))}
+
+      {loading ? (
+        <p className="text-xs text-yellow-400">Checking upcoming bookings...</p>
+      ) : upcoming.length > 0 ? (
+        <div className="text-red-400 text-xs mb-3 p-2 border border-red-500 rounded bg-red-900 bg-opacity-20">
+          ⚠️ Warning: {upcoming.length} upcoming player booking(s) (₱{affectedRevenue}) in the next 30 days will be affected.
+          <br /><strong>Action:</strong> They stay booked — let staff handle them on the day.
+        </div>
+      ) : (
+        <p className="text-emerald-400 text-xs mb-3">✅ No upcoming player bookings in the next 30 days.</p>
+      )}
+
+      {!isOwner ? (
+        <p className="text-xs text-amber-400">🔒 Owner only: ask an OWNER account to confirm this change.</p>
+      ) : (
+        <button onClick={handleConfirm} className="action-btn" style={{ background: targetActive ? '#10b981' : '#f59e0b' }}>
+          <CheckCircle size={14} className="inline mr-1" /> Confirm: {targetLabel}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export const AiConsultantWidget: React.FC = () => {
+  const { profile } = useAuth();
+  const isOwner = profile?.role === 'OWNER';
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{
-    id: '1', role: 'model', text: "Hello! I'm Dink-Ai. Ask me about revenue, or ask me to block a court, update a rate, or disable a staff member."
+    id: '1', role: 'model', text: "Hello! I'm Dink-Ai. Ask me about revenue, put a court under maintenance, block a court, update a rate, or disable a staff member."
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -296,6 +394,15 @@ export const AiConsultantWidget: React.FC = () => {
         await disableStaffAccount(action.payload.staff_id);
       } else if (action.type === 'activate_staff') {
         await enableStaffAccount(action.payload.staff_id);
+      } else if (action.type === 'set_court_status') {
+        const allCourts = await fetchCourts();
+        const targetIds = allCourts
+          .filter(c => action.payload.courts?.includes(c.name))
+          .map(c => c.id);
+        const targetActive = action.payload.is_active === true;
+        for (const courtId of targetIds) {
+          await updateCourtStatus(courtId, targetActive);
+        }
       } else if (action.type === 'block_schedule') {
         await createMaintenanceBlock(
           action.payload.court_id, 
@@ -337,7 +444,9 @@ export const AiConsultantWidget: React.FC = () => {
                 
                 {/* Action Confirmation Card */}
                 {msg.action && !msg.actionExecuted && msg.role === 'model' && (
-                  msg.action.type === 'prepare_block' ? (
+                  msg.action.type === 'set_court_status' ? (
+                    <CourtStatusCard msgId={msg.id} action={msg.action} isOwner={isOwner} onComplete={handleActionComplete} />
+                  ) : msg.action.type === 'prepare_block' ? (
                     <InteractiveBlockCard msgId={msg.id} action={msg.action} onComplete={handleActionComplete} />
                   ) : msg.action.type === 'show_heatmap' ? (
                     <ActionableHeatmap 

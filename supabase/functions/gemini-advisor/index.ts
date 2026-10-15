@@ -65,6 +65,13 @@ Deno.serve(async (req) => {
       3. activate_staff: { staff_id: string }
       4. prepare_block: { start_date: string, end_date: string, courts: string[], start_hour: number, end_hour: number, reason: string } // courts should be an array of court names (e.g., ["Court A", "Court B"])
       5. show_heatmap: { start_date: string, end_date: string } // CRITICAL RULE: ONLY use this action when the admin EXPLICITLY asks to GENERATE or SHOW a NEW heatmap. Do NOT repeat this action on follow-up questions! If the user is just asking follow-up questions about the data, only answer in text_response and omit the heatmap action.
+      6. set_court_status: { courts: string[], is_active: boolean } // courts should be an array of court names (e.g., ["Court B"]). Use is_active=false to put courts UNDER MAINTENANCE (unbookable until re-enabled), is_active=true to put them back OPERATIONAL.
+
+      COURT STATUS VS SCHEDULE BLOCK:
+      - "Put Court B under maintenance / take offline / disable" with NO dates means set_court_status with is_active=false (indefinite, same as the RateController power toggle). Do NOT use prepare_block for this.
+      - Requests WITH specific dates/hours (e.g., "block Sept 6-10") mean prepare_block as before.
+      - "Back operational / re-enable / activate Court B" means set_court_status with is_active=true.
+      - The client context "courts" list includes each court's current is_active flag. If the court is already in the requested state, say so in text_response and omit the action.
 
       HISTORICAL REVENUE RULES:
       - The client context contains "revenue" (current this-month KPIs) AND "requestedPeriod" (explicit past month/day the admin asked about, with pre-computed total_revenue, bookings_count, abv, court_breakdown, daily_breakdown).

@@ -476,6 +476,18 @@ export const updateCourtRate = async (
   if (error) throw new Error(error.message);
 };
 
+export const updateCourtStatus = async (
+  courtId: string,
+  isActive: boolean
+): Promise<void> => {
+  const { error } = await supabase
+    .from('courts')
+    .update({ is_active: isActive })
+    .eq('id', courtId);
+
+  if (error) throw new Error(error.message);
+};
+
 export const disableStaffAccount = async (staffId: string): Promise<void> => {
   const { error } = await supabase
     .from('profiles')
