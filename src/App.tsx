@@ -12,6 +12,8 @@ import './App.css';
 import { AiConsultantWidget } from './components/admin/AiConsultantWidget';
 import { LoadingScreen } from './components/common/LoadingScreen';
 
+// Main app file
+
 const AdminPortalContent: React.FC<{ onBackToCustomer: () => void }> = ({ onBackToCustomer }) => {
   const { user, profile, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'REVENUE' | 'CHECKIN' | 'MAINTENANCE' | 'RATES' | 'TICKETS' | 'STAFF'>('REVENUE');
